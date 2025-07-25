@@ -127,6 +127,7 @@ token_arr tokenize(const char* input)
 		free(tokens.arr);
 		exit(-1);
 	}
+	tokens.arr = (token*)temp;
 
 	return tokens;
 }
@@ -140,8 +141,8 @@ typedef struct _node
 		int number;
 	}value;
 
-	node* left;
-	node* right;
+	struct _node* left;
+	struct _node* right;
 }node;
 
 //parse number from input token and string
@@ -164,7 +165,77 @@ int parse_node(token* token, char* str)
 //assemble AST from tokens
 node* make_ast(token_arr tokens, char* str)
 {
+	token* tok = &tokens.arr[0];
 
+	//create root of tree and initialize with the first token
+	if(tokens.arr[0].t_type != number)
+	{
+		return NULL;
+	}
+
+	//assign root node
+	node* root = (node*)calloc(1, sizeof(node));
+	root->t_type = tok->t_type;
+	root->value.number = parse_node(tok, str);
+
+	node* cur = root;
+
+	//loop over the rest of the tokens
+	for(size_t i = 1; i < tokens.size; i++)
+	{
+		tok = &tokens.arr[i];
+
+		//assign values to node
+		node* next = (node*)calloc(1, sizeof(node));
+		next->t_type = tok->t_type;
+		if(next->t_type == number)
+		{
+			next->value.number = parse_node(tok, str);
+		}
+
+		if(cur->t_type == number && (next->t_type == minus || next->t_type == plus))
+		{
+			cur->left = next;
+			cur = cur->left;
+		}
+
+		else if((cur->t_type == minus || cur->t_type == plus) && next->t_type == number)
+		{
+			cur->right = next;
+		}
+
+		else if((cur->t_type == minus || cur->t_type == plus) && (next->t_type == minus || next->t_type == plus))
+		{
+			cur->left = next;
+			cur = cur->left;
+		}
+	}
+
+	return root;
+}
+
+//recursively free tree
+void free_ast(node* root)
+{
+	if(root == NULL)
+	{
+		return;
+	}
+
+	if(root->left != NULL)
+	{
+		free_ast(root->left);
+		root->left = NULL;
+	}
+
+	if(root->right != NULL)
+	{
+		free_ast(root->right);
+		root->right = NULL;
+	}
+
+	free(root);
+	root = NULL;
 }
 
 int main() 
@@ -172,29 +243,8 @@ int main()
 	char str[] = "15 + 21 - 45 + 2000 - 1500";
 	token_arr tokens = tokenize(str);
 
-	for(size_t i = 0; i < tokens.size; i++)
-	{
-		token* t = &tokens.arr[i];
-
-		switch(t->t_type)
-		{
-			case number:
-				printf("Token type: number\n");
-				break;
-
-			case minus:
-				printf("Token type: minus\n");
-				break;
-
-			case plus:
-				printf("Token type: plus\n");
-				break;
-		}
-
-		printf("Token: %.*s\n", t->end-t->start, str+t->start);
-		printf("\n");
-	}
-
+	node* tree = make_ast(tokens, str);
+	free_ast(tree);
 	free_token_arr(&tokens);
 	return 0;
 }

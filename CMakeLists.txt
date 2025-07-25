@@ -5,4 +5,5 @@ set(SOURCES
 	src/main.c
 )
 
+add_compile_options(-g)
 add_executable(badl ${SOURCES})
