@@ -8,7 +8,6 @@ typedef struct _substr
 	size_t offset;
 }substr;
 
-
 //filters
 int is_num(const char c)
 {
@@ -57,6 +56,21 @@ int tokenize_number(substr* input)
 	}
 
 	return 0;
+}
+
+//clear characters(like whitespace)
+void clear_characters(substr* input, int (*filter)(char))
+{
+	size_t index = input->offset;
+	while(filter(input->str[index]))
+	{
+		index++;
+	}
+
+	if(input->offset >= input->len)
+	{
+		input->offset = input->len - 1;
+	}
 }
 
 int main() 
