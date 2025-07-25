@@ -29,33 +29,47 @@ int is_minus(const char c)
 	return c == '-';
 }
 
+typedef enum _token_type
+{
+	number,
+	plus,
+	minus
+}token_type;
+
+typedef struct _token
+{
+	token_type t_type;
+	union 
+	{
+		int number;
+	}data;
+
+	size_t start;
+	size_t end;
+}token;
+
 //lexer functions
-int tokenize_number(substr* input)
+int tokenize(substr* input, token_type t, int (*filter)(char), int (*end)(char), token* to_return)
 {
 	size_t index = input->offset;
-	while(is_num(input->str[index]))
+	size_t tok_start = index;
+	while(filter(input->str[index]) && !end(input->str[index]) && index < input->len - 1)
 	{
 		index++;
 	}
 
-	if(!is_whitespace(input->str[index]))
+	if(!end(input->str[index]))
 	{
-		//invalid token
 		return 0;
 	}
-	
-	//bounds check to make sure we're not outside of string
-	if(input->offset < index)
-	{
-		input->offset = index + 1;
-		if(input->offset >= input->len)
-		{
-			input->offset--;
-		}
-		return 1;
-	}
 
-	return 0;
+	size_t tok_end = index;
+
+	//write data to token
+	to_return->t_type = t;
+	to_return->start = tok_start;
+	to_return->end = tok_end;
+	return 1;
 }
 
 //clear characters(like whitespace)
