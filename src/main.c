@@ -131,6 +131,42 @@ token_arr tokenize(const char* input)
 	return tokens;
 }
 
+//AST node structure
+typedef struct _node
+{
+	token_type t_type;
+	union
+	{
+		int number;
+	}value;
+
+	node* left;
+	node* right;
+}node;
+
+//parse number from input token and string
+int parse_node(token* token, char* str)
+{
+	//copy substring
+	size_t len = token->end-token->start;
+	char* substr = (char*)calloc(len+1, sizeof(char));
+	strncpy(substr, str+token->start, len);
+
+	//convert to integer
+	int num = atoi(substr);
+
+	//free memory
+	free(substr);
+
+	return num;
+}
+
+//assemble AST from tokens
+node* make_ast(token_arr tokens, char* str)
+{
+
+}
+
 int main() 
 {
 	char str[] = "15 + 21 - 45 + 2000 - 1500";
@@ -155,8 +191,6 @@ int main()
 				break;
 		}
 
-		printf("Token start: %d\n", t->start);
-		printf("Token end: %d\n", t->end);
 		printf("Token: %.*s\n", t->end-t->start, str+t->start);
 		printf("\n");
 	}
