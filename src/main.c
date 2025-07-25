@@ -28,6 +28,12 @@ void free_token_arr(token_arr* to_free)
 	to_free->arr = NULL;
 }
 
+void alloc_fail()
+{
+	fprintf(stderr, "badlang: Memory allocation failure\n");
+	exit(-1);
+}
+
 int is_whitespace(char c)
 {
 	if(c == '	' || c == ' ' || c == '\n')
@@ -57,9 +63,7 @@ token_arr tokenize(const char* input)
 	//check that memory was initialized
 	if(tokens.arr == NULL)
 	{
-		fprintf(stderr, "Unable to allocate space for tokens\n");
-		free(tokens.arr);
-		exit(-1);
+		alloc_fail();
 	}
 
 	//tokenize data
@@ -113,9 +117,7 @@ token_arr tokenize(const char* input)
 		//we've encountered an invalid token
 		else
 		{
-			fprintf(stderr, "Error - Unrecognized token: %c\n", c);
-			free(tokens.arr); //free dynamically allocated memory
-			exit(-1);
+			alloc_fail();
 		}
 	}
 
@@ -123,9 +125,7 @@ token_arr tokenize(const char* input)
 	void* temp = realloc(tokens.arr, sizeof(token) * tokens.size);
 	if(temp == NULL)
 	{
-		fprintf(stderr, "Error - Unable to resize token array\n");
-		free(tokens.arr);
-		exit(-1);
+		alloc_fail();
 	}
 	tokens.arr = (token*)temp;
 
@@ -151,6 +151,10 @@ int parse_node(token* token, char* str)
 	//copy substring
 	size_t len = token->end-token->start;
 	char* substr = (char*)calloc(len+1, sizeof(char));
+	if(substr == NULL)
+	{
+		alloc_fail();
+	}
 	strncpy(substr, str+token->start, len);
 
 	//convert to integer
@@ -175,6 +179,10 @@ node* make_ast(token_arr tokens, char* str)
 
 	//assign root node
 	node* root = (node*)calloc(1, sizeof(node));
+	if(root == NULL)
+	{
+		alloc_fail();
+	}
 	root->t_type = tok->t_type;
 	root->value.number = parse_node(tok, str);
 
@@ -187,6 +195,10 @@ node* make_ast(token_arr tokens, char* str)
 
 		//assign values to node
 		node* next = (node*)calloc(1, sizeof(node));
+		if(next == NULL)
+		{
+			alloc_fail();
+		}
 		next->t_type = tok->t_type;
 		if(next->t_type == number)
 		{
