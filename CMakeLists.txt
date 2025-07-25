@@ -5,5 +5,5 @@ set(SOURCES
 	src/main.c
 )
 
-add_compile_options(-g)
+add_compile_options(-g -Wall -Wextra)
 add_executable(badl ${SOURCES})

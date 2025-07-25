@@ -28,10 +28,30 @@ void free_token_arr(token_arr* to_free)
 	to_free->arr = NULL;
 }
 
-void alloc_fail()
+//allocate memory and quit safely on failure
+void* alloc_nofail(size_t size)
 {
-	fprintf(stderr, "badlang: Memory allocation failure\n");
-	exit(-1);
+	void* ptr = calloc(1, size);
+	if(ptr == NULL)
+	{
+		fprintf(stderr, "badlang: Memory allocation failure\n");
+		exit(-1);
+	}
+
+	return ptr;
+}
+
+//reallocate memory and quit safely on failure
+void* realloc_nofail(void* original, size_t size)
+{
+	void* ptr = realloc(original, size);
+	if(ptr == NULL)
+	{
+		fprintf(stderr, "badlang: Memory realloc failure\n");
+		exit(-2);
+	}
+
+	return ptr;
 }
 
 int is_whitespace(char c)
@@ -58,13 +78,7 @@ token_arr tokenize(const char* input)
 	//allocate space for our tokens
 	token_arr tokens;
 	tokens.size = 0;
-	tokens.arr = (token*)calloc(input_max, sizeof(token));
-
-	//check that memory was initialized
-	if(tokens.arr == NULL)
-	{
-		alloc_fail();
-	}
+	tokens.arr = (token*)alloc_nofail(input_max * sizeof(token));
 
 	//tokenize data
 	for(size_t i = 0; i < input_max; i++)
@@ -117,17 +131,13 @@ token_arr tokenize(const char* input)
 		//we've encountered an invalid token
 		else
 		{
-			alloc_fail();
+			fprintf(stderr, "badlang: Invalid token encountered\n");
+			exit(-3);
 		}
 	}
 
 	//resize token array to appropriate size
-	void* temp = realloc(tokens.arr, sizeof(token) * tokens.size);
-	if(temp == NULL)
-	{
-		alloc_fail();
-	}
-	tokens.arr = (token*)temp;
+	tokens.arr = realloc_nofail(tokens.arr, sizeof(token) * tokens.size);
 
 	return tokens;
 }
@@ -150,11 +160,7 @@ int parse_node(token* token, char* str)
 {
 	//copy substring
 	size_t len = token->end-token->start;
-	char* substr = (char*)calloc(len+1, sizeof(char));
-	if(substr == NULL)
-	{
-		alloc_fail();
-	}
+	char* substr = (char*)alloc_nofail((len+1) * sizeof(char));
 	strncpy(substr, str+token->start, len);
 
 	//convert to integer
@@ -178,11 +184,7 @@ node* make_ast(token_arr tokens, char* str)
 	}
 
 	//assign root node
-	node* root = (node*)calloc(1, sizeof(node));
-	if(root == NULL)
-	{
-		alloc_fail();
-	}
+	node* root = (node*)alloc_nofail(1 * sizeof(node));
 	root->t_type = tok->t_type;
 	root->value.number = parse_node(tok, str);
 
@@ -194,12 +196,9 @@ node* make_ast(token_arr tokens, char* str)
 		tok = &tokens.arr[i];
 
 		//assign values to node
-		node* next = (node*)calloc(1, sizeof(node));
-		if(next == NULL)
-		{
-			alloc_fail();
-		}
+		node* next = (node*)alloc_nofail(1 * sizeof(node));
 		next->t_type = tok->t_type;
+
 		if(next->t_type == number)
 		{
 			next->value.number = parse_node(tok, str);
