@@ -105,9 +105,9 @@ void clear_characters(substr* input, int (*filter)(char))
 	char c = 0;
 	do
 	{
-		c = 
+		c = filter(input->str[index]);
 		index++;
-	}while(filter(input->str[index]));
+	}while(c);
 	index--;
 
 	if(input->offset >= input->len)
