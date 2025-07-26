@@ -73,10 +73,16 @@ int tokenize(substr* input, token_type t, char (*filter)(char), char (*end)(char
 {
 	size_t index = input->offset;
 	size_t tok_start = index;
-	while(filter(input->str[index]) && !end(input->str[index]) && index < input->len - 1)
+
+	char c = 0;
+	char e = 0;
+	do
 	{
+		c = filter(input->str[index]);
+		e = end(input->str[index]);
 		index++;
-	}
+	} while(c && e && index < input->len - 1);
+	index--;
 
 	if(!end(input->str[index]))
 	{
@@ -96,10 +102,13 @@ int tokenize(substr* input, token_type t, char (*filter)(char), char (*end)(char
 void clear_characters(substr* input, int (*filter)(char))
 {
 	size_t index = input->offset;
-	while(filter(input->str[index]))
+	char c = 0;
+	do
 	{
+		c = 
 		index++;
-	}
+	}while(filter(input->str[index]));
+	index--;
 
 	if(input->offset >= input->len)
 	{
