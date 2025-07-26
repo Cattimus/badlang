@@ -9,24 +9,44 @@ typedef struct _substr
 }substr;
 
 //filters
-int is_num(const char c)
+char num(const char c)
 {
-	return c >= '0' && c <= '9';
+	if(c >= '0' && c <= '9')
+	{
+		return c;
+	}
+
+	return 0;
 }
 
-int is_whitespace(const char c)
+char is_whitespace(const char c)
 {
-	return c == ' ' || c == '\n' || c == '\t';
+	if(c == ' ' || c == '\n' || c == '\t')
+	{
+		return c;
+	}
+
+	return 0;
 }
 
-int is_plus(const char c)
+char is_plus(const char c)
 {
-	return c == '+';
+	if(c == '+')
+	{
+		return c;
+	}
+
+	return 0;
 }
 
-int is_minus(const char c)
+char is_minus(const char c)
 {
-	return c == '-';
+	if(c == '-')
+	{
+		return c;
+	}
+
+	return 0;
 }
 
 typedef enum _token_type
@@ -49,7 +69,7 @@ typedef struct _token
 }token;
 
 //lexer functions
-int tokenize(substr* input, token_type t, int (*filter)(char), int (*end)(char), token* to_return)
+int tokenize(substr* input, token_type t, char (*filter)(char), char (*end)(char), token* to_return)
 {
 	size_t index = input->offset;
 	size_t tok_start = index;
