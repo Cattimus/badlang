@@ -58,30 +58,29 @@ void get_token(substr* str, token* t)
 	size_t c = str->str[str->cursor];
 	size_t start = str->cursor;
 	size_t end = str->cursor;
+
 	//pure whitespace isn't a symbol
 	if(symbols[c] == whitespace)
 	{
+		str->cursor++;
 		return;
 	}
 
 	//grab all symbols until we encounter whitespace
-	while(symbols[c] != whitespace && symbols[c] != invalid && c < str->len)
+	while(symbols[c] != whitespace && symbols[c] != invalid && end < str->len)
 	{
 		end++;
-		c = str->str[end];	
+		c = str->str[end];
 	}
 
 	//if we hit an invalid character
 	if(symbols[c] == invalid)
 	{
-		return;
+		fprintf(stderr, "Invalid symbol detected.\n");
+		exit(-1);
 	}
 
-	else if(symbols[c] == whitespace)
-	{
-		str->cursor = end + 1;
-	}
-
+	str->cursor = end + 1;
 	t->start = start;
 	t->end = end;
 }
@@ -90,12 +89,21 @@ int main()
 {
 	init_symbols();
 	char str[] = {"19 + 21 + 118 + 34 - 43 + 21\n"};
-	for(size_t i = 0; i < strlen(str); i++)
+
+	substr to_pass;
+	to_pass.str = str;
+	to_pass.len = strlen(str);
+	to_pass.cursor = 0;
+
+	token tokens[30];
+	size_t tok_cursor = 0;
+	while(to_pass.cursor < to_pass.len - 1)
 	{
-		if(symbols[(size_t)str[i]] == invalid)
+		token* cur = &tokens[tok_cursor];
+		get_token(&to_pass, cur);
+		if(cur->end - cur->start > 0)
 		{
-			fprintf(stderr, "invalid symbol detected: %c\n", str[i]);
-			exit(-1);
+			tok_cursor++;
 		}
 	}
 }
