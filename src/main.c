@@ -1,122 +1,53 @@
 #include <stdio.h>
 #include <string.h>
-
-typedef struct _substr
-{
-	const char* str;
-	size_t len;
-	size_t offset;
-}substr;
-
-//filters
-char num(const char c)
-{
-	if(c >= '0' && c <= '9')
-	{
-		return c;
-	}
-
-	return 0;
-}
-
-char is_whitespace(const char c)
-{
-	if(c == ' ' || c == '\n' || c == '\t')
-	{
-		return c;
-	}
-
-	return 0;
-}
-
-char is_plus(const char c)
-{
-	if(c == '+')
-	{
-		return c;
-	}
-
-	return 0;
-}
-
-char is_minus(const char c)
-{
-	if(c == '-')
-	{
-		return c;
-	}
-
-	return 0;
-}
+#include <stdlib.h>
 
 typedef enum _token_type
 {
+	invalid,
 	number,
 	plus,
-	minus
+	minus,
+	whitespace,
 }token_type;
 
-typedef struct _token
+//this is how we catch invalid tokens
+token_type symbols[127];
+
+void init_symbols()
 {
-	token_type t_type;
-	union 
-	{
-		int number;
-	}data;
+	//whitespace symbols
+	symbols['\n'] = whitespace;
+	symbols[' ']  = whitespace;
+	symbols['\t'] = whitespace;
 
-	size_t start;
-	size_t end;
-}token;
+	//number symbols
+	symbols['0'] = number;
+	symbols['1'] = number;
+	symbols['2'] = number;
+	symbols['3'] = number;
+	symbols['4'] = number;
+	symbols['5'] = number;
+	symbols['6'] = number;
+	symbols['7'] = number;
+	symbols['8'] = number;
+	symbols['9'] = number;
 
-//lexer functions
-int tokenize(substr* input, token_type t, char (*filter)(char), char (*end)(char), token* to_return)
-{
-	size_t index = input->offset;
-	size_t tok_start = index;
-
-	char c = 0;
-	char e = 0;
-	do
-	{
-		c = filter(input->str[index]);
-		e = end(input->str[index]);
-		index++;
-	} while(c && e && index < input->len - 1);
-	index--;
-
-	if(!end(input->str[index]))
-	{
-		return 0;
-	}
-
-	size_t tok_end = index;
-
-	//write data to token
-	to_return->t_type = t;
-	to_return->start = tok_start;
-	to_return->end = tok_end;
-	return 1;
-}
-
-//clear characters(like whitespace)
-void clear_characters(substr* input, int (*filter)(char))
-{
-	size_t index = input->offset;
-	char c = 0;
-	do
-	{
-		c = filter(input->str[index]);
-		index++;
-	}while(c);
-	index--;
-
-	if(input->offset >= input->len)
-	{
-		input->offset = input->len - 1;
-	}
+	//operator symbols
+	symbols['+'] = plus;
+	symbols['-'] = minus;
 }
 
 int main() 
 {
-
+	init_symbols();
+	char str[] = {"19 + 21 + 118 + 34 - 43 + 21"};
+	for(size_t i = 0; i < strlen(str); i++)
+	{
+		if(symbols[str[i]] == invalid)
+		{
+			fprintf(stderr, "invalid symbol detected: %c\n", str[i]);
+			exit(-1);
+		}
+	}
 }
