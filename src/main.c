@@ -85,6 +85,44 @@ void get_token(substr* str, token* t)
 	t->end = end;
 }
 
+int parse_token(substr* str, token* t)
+{
+	switch(str->str[t->start])
+	{
+		case '+':
+		{
+			if(t->end == t->start + 1)
+			{
+				t->t_type = plus;
+				return 1;
+			}
+			break;
+		}
+
+		case '-':
+		{
+			if(t->end == t->start + 1)
+			{
+				t->t_type = minus;
+				return 1;
+			}
+		}
+	}
+
+	//if we've reached this part in the function, we've got a pretty good idea it's a number
+	for(size_t i = t->start; i < t->end; i++)
+	{
+		//if we encounter something that's not a digit, we know it's invalid
+		if(symbols[(size_t)str->str[i]] != number)
+		{
+			return 0;
+		}
+	}
+
+	t->t_type = number;
+	return 1;
+}
+
 int main() 
 {
 	init_symbols();
@@ -104,6 +142,7 @@ int main()
 		if(cur->end - cur->start > 0)
 		{
 			tok_cursor++;
+			parse_token(&to_pass, cur);
 		}
 	}
 }
