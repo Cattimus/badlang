@@ -161,7 +161,7 @@ tree assemble_tree(token* tokens, size_t token_count)
 	tree ast;
 	ast.count = 0;
 	ast.cursor = 0;
-	ast.nodes = (node*)calloc(token_count ,sizeof(node*));
+	ast.nodes = (node*)calloc(token_count ,sizeof(node));
 
 	node* cur = &ast.nodes[0];
 	cur->t = &tokens[0];
