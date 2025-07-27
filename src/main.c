@@ -127,18 +127,67 @@ int parse_token(substr* str, token* t)
 	return 1;
 }
 
-//AST structure
+
+//ast node
 typedef struct _node
 {
-	token t;
+	token* t;
 	struct _node* left;
 	struct _node* right;
 }node;
 
-//assemble AST from node array
-node* assemble_tree(token* tokens, size_t token_count)
+//AST structure
+typedef struct _tree
 {
+	node* nodes;
+	size_t count;
+	size_t cursor;
+}tree;
 
+//free dynamic memory
+void free_ast(tree* ast)
+{
+	if(ast->nodes != NULL)
+	{
+		free(ast->nodes);
+		ast->nodes = NULL;
+	}
+}
+
+//assemble AST from node array
+tree assemble_tree(token* tokens, size_t token_count)
+{
+	//allocate memory for our tree
+	tree ast;
+	ast.count = 0;
+	ast.cursor = 0;
+	ast.nodes = (node*)calloc(token_count ,sizeof(node*));
+
+	node* cur = &ast.nodes[0];
+	cur->t = &tokens[0];
+	for(size_t i = 1; i < token_count; i++)
+	{
+		ast.nodes[i].t = &tokens[i];
+
+		if(cur->t->t_type == number)
+		{
+			if(tokens[i].t_type != number)
+			{
+				cur->right = &ast.nodes[i];
+				cur = cur->right;
+			}
+		}
+		
+		else
+		{
+			if(tokens[i].t_type == number)
+			{
+				cur->left = &ast.nodes[i];
+			}
+		}
+	}
+
+	return ast;
 }
 
 int main() 
@@ -164,26 +213,8 @@ int main()
 		}
 	}
 
-	for(size_t i = 0; i < tok_cursor; i++)
-	{
-		printf("Token %lu\n", i);
-		switch(tokens[i].t_type)
-		{
-			case plus:
-				printf("Plus\n");
-				break;
-			
-			case minus:
-				printf("Minus\n");
-				break;
+	tree ast = assemble_tree(tokens, tok_cursor);
+	free_ast(&ast);
 
-			case number:
-				printf("%ld\n", tokens[i].value);
-				break;
-			
-			case invalid:
-				printf("error\n");
-				break;
-		}
-	}
+	return 0;
 }
