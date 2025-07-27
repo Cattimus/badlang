@@ -50,6 +50,7 @@ typedef struct _token
 	token_type t_type;
 	size_t start;
 	size_t end;
+	long value;
 }token;
 
 //get the bounds of our token
@@ -119,8 +120,25 @@ int parse_token(substr* str, token* t)
 		}
 	}
 
+	//we're not checking the output value here but that's fine
 	t->t_type = number;
+	char* end;
+	t->value = strtol(str->str + t->start, &end, 10);
 	return 1;
+}
+
+//AST structure
+typedef struct _node
+{
+	token t;
+	struct _node* left;
+	struct _node* right;
+}node;
+
+//assemble AST from node array
+node* assemble_tree(token* tokens, size_t token_count)
+{
+
 }
 
 int main() 
@@ -143,6 +161,29 @@ int main()
 		{
 			tok_cursor++;
 			parse_token(&to_pass, cur);
+		}
+	}
+
+	for(size_t i = 0; i < tok_cursor; i++)
+	{
+		printf("Token %lu\n", i);
+		switch(tokens[i].t_type)
+		{
+			case plus:
+				printf("Plus\n");
+				break;
+			
+			case minus:
+				printf("Minus\n");
+				break;
+
+			case number:
+				printf("%ld\n", tokens[i].value);
+				break;
+			
+			case invalid:
+				printf("error\n");
+				break;
 		}
 	}
 }
