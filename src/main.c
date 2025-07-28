@@ -167,14 +167,8 @@ tree assemble_tree(token* tokens, size_t token_count)
 	node* cur = &ast.nodes[0];
 	ast.root = cur;
 	cur->t = &tokens[0];
-	for(size_t i = 0; i < token_count; i++)
+	for(size_t i = 1; i < token_count; i++)
 	{
-		//skip first operator (since that is the root)
-		if(i == 1)
-		{
-			continue;
-		}
-
 		ast.nodes[i].t = &tokens[i];
 
 		if(tokens[i].t_type == number)
