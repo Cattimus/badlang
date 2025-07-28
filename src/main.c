@@ -142,6 +142,7 @@ typedef struct _tree
 	node* nodes;
 	size_t count;
 	size_t cursor;
+	node* root;
 }tree;
 
 //free dynamic memory
@@ -164,30 +165,56 @@ tree assemble_tree(token* tokens, size_t token_count)
 	ast.nodes = (node*)calloc(token_count ,sizeof(node));
 
 	node* cur = &ast.nodes[0];
+	ast.root = cur;
 	cur->t = &tokens[0];
-	for(size_t i = 1; i < token_count; i++)
+	for(size_t i = 0; i < token_count; i++)
 	{
+		//skip first operator (since that is the root)
+		if(i == 1)
+		{
+			continue;
+		}
+
 		ast.nodes[i].t = &tokens[i];
 
-		if(cur->t->t_type == number)
+		if(tokens[i].t_type == number)
 		{
-			if(tokens[i].t_type != number)
-			{
-				cur->right = &ast.nodes[i];
-				cur = cur->right;
-			}
+			cur->left = &ast.nodes[i];
 		}
-		
 		else
 		{
-			if(tokens[i].t_type == number)
-			{
-				cur->left = &ast.nodes[i];
-			}
+			cur->right = &ast.nodes[i];
+			cur = cur->right;
 		}
 	}
 
 	return ast;
+}
+
+//evaluate AST to result
+long eval_tree(tree* to_eval)
+{
+	node* cur = to_eval->root;
+	long result = cur->t->value;
+
+	while(cur->right != NULL)
+	{
+		long next = cur->right->left->t->value;
+		switch(cur->right->t->t_type)
+		{
+			case plus:
+				result += next;
+				break;
+
+			case minus:
+				result -= next;
+				break;
+		}
+
+		cur = cur->right;
+	}
+
+	return result;
 }
 
 int main() 
@@ -214,6 +241,7 @@ int main()
 	}
 
 	tree ast = assemble_tree(tokens, tok_cursor);
+	printf("result: %ld\n", eval_tree(&ast));
 	free_ast(&ast);
 
 	return 0;
