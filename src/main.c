@@ -2,6 +2,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+typedef int (*filter)(char);
+
 typedef enum
 {
 	invalid,
@@ -16,11 +18,60 @@ typedef enum
 	literal,
 	digit,
 	decimal,
-	backslash
+	backslash,
+	letter,
+	underscore
 }Token;
 
 Token classify[127];
 
+typedef struct
+{
+	int initial_state;
+	int state_count;
+	int* accepted_states;
+	int accepted_state_count;
+	filter** transitions; //array of filters for different states
+}DFA;
+
+DFA create_DFA(int initial_state, int max_state, int* accepted_states, int accepted_state_count)
+{
+	DFA dfa;
+	dfa.initial_state = initial_state;
+	dfa.state_count = max_state;
+	dfa.accepted_state_count = accepted_state_count;
+	dfa.accepted_states = (int*)calloc(accepted_state_count, sizeof(int));
+	memcpy(dfa.accepted_states, accepted_states, accepted_state_count);
+
+	//holy syntax batman (allocating the array to store filter function pointers)
+	dfa.transitions = (filter**)calloc(max_state, sizeof(filter*));
+	return dfa;
+}
+
+//free dynamically allocated memory
+void destroy_DFA(DFA* dfa)
+{
+	if(dfa->accepted_states != NULL)
+	{
+		free(dfa->accepted_states);
+		dfa->accepted_states = NULL;
+	}
+
+	if(dfa->transitions != NULL)
+	{
+		for(size_t i = 0; i < dfa->state_count; i++)
+		{
+			if(dfa->transitions[i] != NULL)
+			{
+				free(dfa->transitions[i]);
+				dfa->transitions[i] = NULL;
+			}
+		}
+
+		free(dfa->transitions);
+		dfa->transitions = NULL;
+	}
+}
 
 int main() 
 {
@@ -51,4 +102,15 @@ int main()
 	classify['='] = assign;
 
 	classify['/'] = backslash;
+	classify['_'] = underscore;
+
+	//characters
+	for(char i = 'a'; i < 'z'; i++)
+	{
+		classify[(int)i] = letter;
+	}
+	for(char i = 'A'; i < 'Z'; i++)
+	{
+		classify[(int)i] = letter;
+	}
 }
