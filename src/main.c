@@ -73,7 +73,7 @@ void destroy_DFA(DFA* dfa)
 	}
 }
 
-int main() 
+void init_classifiers()
 {
 	classify['\n'] = whitespace;
 	classify['\t'] = whitespace;
@@ -113,4 +113,9 @@ int main()
 	{
 		classify[(int)i] = letter;
 	}
+}
+
+int main() 
+{
+	init_classifiers();
 }
