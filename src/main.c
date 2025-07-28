@@ -10,79 +10,57 @@ typedef enum _State
 	operator,
 }State;
 
-int is_whitespace(char c)
+State classify(char c)
 {
-	return (c == ' ' || c == '\n' || c == '\t');
-}
-
-int is_number(char c)
-{
-	return (c >= '0' && c <= '9');
-}
-
-int is_operator(char c)
-{
-	return (c == '+' || c == '-');
-}
-
-int transition(State state, char c)
-{
-	switch(state)
+	if(c == ' ' || c == '\n' || c == '\t')
 	{
-		case number:
-		{
-			if(is_whitespace(c))
-				return whitespace;
-			else if(is_number(c))
-				return number;
-			else
-				return invalid;
-			break;
-		}
-
-		case whitespace:
-		{
-			if(is_operator(c))
-				return operator;
-			else if(is_number(c))
-				return number;
-			else
-				return invalid;
-			break;
-		}
-
-		case operator:
-		{
-			if(is_whitespace(c))
-				return whitespace;
-			else
-				return invalid;
-		}
+		return whitespace;
+	}
+	else if(c >= '0' && c <= '9')
+	{
+		return number;
+	}
+	else if(c == '+' || c == '-')
+	{
+		return operator;
 	}
 
 	return invalid;
 }
 
-int is_valid(const char* str)
+int transitions[3][3] = {
+	{number,  whitespace, invalid},
+	{number,  whitespace, operator},
+	{invalid, whitespace, invalid}
+};
+
+int is_valid(int transition[3][3], State initial, State accepting, const char* str)
 {
+	State state = initial;
 	size_t len = strlen(str);
-	State state = number;
 	for(size_t i = 0; i < len; i++)
 	{
 		char c = str[i];
-		state = transition(state, c);
+		int j = classify(c);
+
+		if(j == invalid)
+		{
+			return 0;
+		}
+	
+		state = transition[state][j];
+
 		if(state == invalid)
 		{
 			return 0;
 		}
 	}
 
-	return 1;
+	return state == accepting;
 }
 
 int main() 
 {
-	printf("%d\n", is_valid("15 + 21 + 84 - 21 + 99"));
-	
+	printf("%d\n", is_valid(transitions, number, number, "21 + 14 - 19 + 85 + 45 - 92 + 101"));
 	return 0;
 }
