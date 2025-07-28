@@ -4,9 +4,10 @@
 
 typedef enum _State
 {
+	invalid = -1,
 	number,
 	whitespace,
-	operator
+	operator,
 }State;
 
 int is_whitespace(char c)
@@ -24,51 +25,44 @@ int is_operator(char c)
 	return (c == '+' || c == '-');
 }
 
-int transition_number(char c)
+int transition(State state, char c)
 {
-	if(is_whitespace(c))
+	switch(state)
 	{
-		return 1;
+		case number:
+		{
+			if(is_whitespace(c))
+				return whitespace;
+			else if(is_number(c))
+				return number;
+			else
+				return invalid;
+			break;
+		}
+
+		case whitespace:
+		{
+			if(is_operator(c))
+				return operator;
+			else if(is_number(c))
+				return number;
+			else
+				return invalid;
+			break;
+		}
+
+		case operator:
+		{
+			if(is_whitespace(c))
+				return whitespace;
+			else
+				return invalid;
+		}
 	}
-	else if(is_number(c))
-	{
-		return 0;
-	}
-	else
-	{
-		return -1;
-	}
+
+	return invalid;
 }
 
-int transition_whitespace(char c)
-{
-	if(is_operator(c))
-	{
-		return 1;
-	}
-	else if(is_whitespace(c))
-	{
-		return 0;
-	}
-	else
-	{
-		return -1;
-	}
-}
-
-int transition_operator(char c)
-{
-	if(is_whitespace(c))
-	{
-		return 1;
-	}
-	else
-	{
-		return 0;
-	}
-}
-
-//TODO - this won't work because it only goes one direction
 int is_valid(const char* str)
 {
 	size_t len = strlen(str);
@@ -76,56 +70,19 @@ int is_valid(const char* str)
 	for(size_t i = 0; i < len; i++)
 	{
 		char c = str[i];
-		switch(state)
+		state = transition(state, c);
+		if(state == invalid)
 		{
-			case number:
-			{
-				int result = transition_number(c);
-				if(result < 0)
-				{
-					return 0;
-				}
-				else if(result == 1)
-				{
-					state += 1;
-				}
-				break;
-			}
-
-
-			case whitespace:
-			{
-				int result = transition_whitespace(c);
-				if(result < 0)
-				{
-					return 0;
-				}
-				else if(result == 1)
-				{
-					state += 1;
-				}
-				break;
-			}
-
-			case operator:
-			{
-				int result = transition_operator(c);
-				if(result < 0)
-				{
-					return 0;
-				}
-				else if(result == 1)
-				{
-					state -= 1;
-				}
-
-				break;
-			}
+			return 0;
 		}
 	}
+
+	return 1;
 }
 
 int main() 
 {
+	printf("%d\n", is_valid("15 + 21 + 84 - 21 + 99"));
+	
 	return 0;
 }
