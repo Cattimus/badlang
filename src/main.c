@@ -32,6 +32,7 @@ typedef struct
 	int* accepted_states;
 	int accepted_state_count;
 	filter** transitions; //array of filters for different states
+	int* transition_count;
 }DFA;
 
 DFA create_DFA(int initial_state, int max_state, int* accepted_states, int accepted_state_count)
@@ -42,6 +43,7 @@ DFA create_DFA(int initial_state, int max_state, int* accepted_states, int accep
 	dfa.accepted_state_count = accepted_state_count;
 	dfa.accepted_states = (int*)calloc(accepted_state_count, sizeof(int));
 	memcpy(dfa.accepted_states, accepted_states, accepted_state_count);
+	dfa.transition_count = (int*)calloc(max_state, sizeof(int));
 
 	//holy syntax batman (allocating the array to store filter function pointers)
 	dfa.transitions = (filter**)calloc(max_state, sizeof(filter*));
@@ -57,9 +59,15 @@ void destroy_DFA(DFA* dfa)
 		dfa->accepted_states = NULL;
 	}
 
+	if(dfa->transition_count != NULL)
+	{
+		free(dfa->transition_count);
+		dfa->transition_count = NULL;
+	}
+
 	if(dfa->transitions != NULL)
 	{
-		for(size_t i = 0; i < dfa->state_count; i++)
+		for(size_t i = 0; i < (unsigned int)dfa->state_count; i++)
 		{
 			if(dfa->transitions[i] != NULL)
 			{
@@ -71,6 +79,33 @@ void destroy_DFA(DFA* dfa)
 		free(dfa->transitions);
 		dfa->transitions = NULL;
 	}
+}
+
+int add_filter(DFA* dfa, int state, filter transition)
+{
+	//allocate new memory
+	if(dfa->transitions[state] == NULL)
+	{
+		dfa->transition_count[state]++;
+		dfa->transitions[state] = calloc(1, sizeof(filter));
+	}
+	else
+	{
+		filter* temp = NULL;
+		dfa->transition_count[state]++;
+
+		temp = realloc(dfa->transitions[state], dfa->transition_count[state] * sizeof(filter));
+		//failure to realloc array
+		if(temp == NULL)
+		{
+			return 0;
+		}
+
+		dfa->transitions[state] = temp;
+	}
+
+	dfa->transitions[state][dfa->transition_count[state]-1] = transition;
+	return 1;
 }
 
 void init_classifiers()
