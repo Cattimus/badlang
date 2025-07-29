@@ -42,7 +42,7 @@ DFA create_DFA(int initial_state, int max_state, int* accepted_states, int accep
 	dfa.state_count = max_state;
 	dfa.accepted_state_count = accepted_state_count;
 	dfa.accepted_states = (int*)calloc(accepted_state_count, sizeof(int));
-	memcpy(dfa.accepted_states, accepted_states, accepted_state_count);
+	memcpy(dfa.accepted_states, accepted_states, accepted_state_count * sizeof(int));
 	dfa.transition_count = (int*)calloc(max_state, sizeof(int));
 
 	//holy syntax batman (allocating the array to store filter function pointers)
@@ -112,8 +112,8 @@ int get_token(DFA* dfa, const char* str)
 {
 	size_t len = strlen(str);
 	int state = dfa->initial_state;
-	size_t i = 0;
-	for(i = 0; i < len; i++)
+	size_t i = 1;
+	for(i = 1; i < len; i++)
 	{
 		char c = str[i];
 		int is_accepted = 0;
@@ -121,7 +121,7 @@ int get_token(DFA* dfa, const char* str)
 		for(size_t j = 0; j < (size_t)dfa->transition_count[state]; j++)
 		{
 			int temp_state = dfa->transitions[state][j](c);
-			if(temp_state)
+			if(temp_state != -1)
 			{
 				state = temp_state;
 				is_accepted = 1;
@@ -139,7 +139,7 @@ int get_token(DFA* dfa, const char* str)
 	{
 		if(state == dfa->accepted_states[j])
 		{
-			return i;
+			return i-1;
 		}
 	}
 
@@ -194,7 +194,7 @@ int comment_0(char c)
 	{
 		return 1;
 	}
-	return 0;
+	return -1;
 }
 
 int comment_1(char c)
@@ -209,14 +209,50 @@ int comment_1(char c)
 	}
 }
 
+int identifier_0(char c)
+{
+	Token s = classify[(size_t)c];
+	switch(s)
+	{
+		case letter:
+		case digit:
+		case underscore:
+			return 0;
+			break;
+
+		case whitespace:
+			return 1;
+			break;
+		
+		case separator:
+			return 2;
+			break;
+
+		default:
+			return -1;
+			break;
+	}
+}
+
 int main() 
 {
 	init_classifiers();
 
-	int accepted_states[] = {2};
-	DFA comment = create_DFA(0, 2, accepted_states, 1);
+	char str[] = "this_is;my_string = 41;";
+
+	//comments
+	int comment_accepted[] = {2};
+	DFA comment = create_DFA(0, 2, comment_accepted, 1);
 	add_filter(&comment, 0, comment_0);
 	add_filter(&comment, 1, comment_1);
-	printf("%d\n", get_token(&comment, "//this is a comment\n //this is another comment\n"));
+
+	//identifier
+	int identifier_accepted[] = {1,2};
+	DFA identifier = create_DFA(0, 2, identifier_accepted, 2);
+	add_filter(&identifier, 0, identifier_0);
+	printf("%d\n", get_token(&identifier, str));
+	printf("%d\n", get_token(&identifier, str+8));
+
 	destroy_DFA(&comment);
+	destroy_DFA(&identifier);
 }
