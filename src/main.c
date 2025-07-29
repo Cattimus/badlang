@@ -108,13 +108,15 @@ int add_filter(DFA* dfa, int state, filter transition)
 	return 1;
 }
 
-int is_accepted(DFA* dfa, const char* str)
+int get_token(DFA* dfa, const char* str)
 {
 	size_t len = strlen(str);
 	int state = dfa->initial_state;
-	for(size_t i = 0; i < len; i++)
+	size_t i = 0;
+	for(i = 0; i < len; i++)
 	{
 		char c = str[i];
+		int is_accepted = 0;
 		//go through each transition until we hit one that is acceptable
 		for(size_t j = 0; j < (size_t)dfa->transition_count[state]; j++)
 		{
@@ -122,18 +124,25 @@ int is_accepted(DFA* dfa, const char* str)
 			if(temp_state)
 			{
 				state = temp_state;
+				is_accepted = 1;
 				break;
 			}
 		}
-	}
 
-	for(size_t i = 0; i < (size_t)dfa->accepted_state_count; i++)
-	{
-		if(state == dfa->accepted_states[i])
+		if(!is_accepted)
 		{
-			return 1;
+			break;
 		}
 	}
+
+	for(size_t j = 0; j < (size_t)dfa->accepted_state_count; j++)
+	{
+		if(state == dfa->accepted_states[j])
+		{
+			return i;
+		}
+	}
+
 	return 0;
 }
 
@@ -208,6 +217,6 @@ int main()
 	DFA comment = create_DFA(0, 2, accepted_states, 1);
 	add_filter(&comment, 0, comment_0);
 	add_filter(&comment, 1, comment_1);
-	printf("%d\n", is_accepted(&comment, "//this is a comment\n"));
+	printf("%d\n", get_token(&comment, "//this is a comment\n //this is another comment\n"));
 	destroy_DFA(&comment);
 }
