@@ -1,21 +1,31 @@
 
-#DFA of a string that starts with a, contains only a and b, ends with b
-g =[
-	{'a': 0, 'b': 1},
-	{'b': 1, 'a': 0}
+#DFA that describes a comment string
+g = [
+	lambda c: 1 if c == '/' else -1,
+	lambda c: 1 if c != '\n' else 2,
+	lambda c: -1
 ]
 
-str = 'aaabaaabbbababbb'
+def check_identifier(c):
+	if c.isnumeric() or c.isalpha() or c == '_':
+		return 0
+	elif c.isspace():
+		return 1
+	elif c == ';':
+		return 2
+	else:
+		return -1
+
+g2 = [
+	check_identifier
+]
+
+comment = "this_is_an_identifier;"
 state = 0
-for c in str:
-	try:
-		state = g[state][c]
-	except:
-		print("string was rejected")
-		exit(0)
+for c in comment:
+	state = g2[state](c)
+	if state == -1:
+		print("String is rejected")
+		exit(state)
 
-
-if state == 1:
-	print("String was accepted")
-else:
-	print("String was rejected")
+print("String is accepted")
