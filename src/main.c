@@ -43,10 +43,10 @@ DFA create_DFA(int initial_state, int max_state, int* accepted_states, int accep
 	dfa.accepted_state_count = accepted_state_count;
 	dfa.accepted_states = (int*)calloc(accepted_state_count, sizeof(int));
 	memcpy(dfa.accepted_states, accepted_states, accepted_state_count * sizeof(int));
-	dfa.transition_count = (int*)calloc(max_state, sizeof(int));
+	dfa.transition_count = (int*)calloc(max_state + 1, sizeof(int));
 
 	//holy syntax batman (allocating the array to store filter function pointers)
-	dfa.transitions = (filter**)calloc(max_state, sizeof(filter*));
+	dfa.transitions = (filter**)calloc(max_state + 1, sizeof(filter*));
 	return dfa;
 }
 
