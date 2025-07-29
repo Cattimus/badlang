@@ -234,25 +234,82 @@ int identifier_0(char c)
 	}
 }
 
+//TODO - we need a way to ensure that there is only one . in a literal
+int literal_0(char c)
+{
+	Token s = classify[(size_t)c];
+	switch(s)
+	{
+		case digit:
+			return 0;
+			break;
+
+		case whitespace:
+			return 2;
+			break;
+
+		case separator:
+			return 3;
+			break;
+
+		case decimal:
+			return 1;
+			break;
+
+		default:
+			return -1;
+			break;
+	}
+}
+
+int literal_1(char c)
+{
+	Token s = classify[(size_t)c];
+	if(s == digit)
+	{
+		return 0;
+	}
+
+	return -1;
+}
+
 int main() 
 {
 	init_classifiers();
 
-	char str[] = "this_is;my_string = 41;";
+	
 
 	//comments
+	char comment_str[] = "//this is a comment\nthis is not.";
 	int comment_accepted[] = {2};
 	DFA comment = create_DFA(0, 2, comment_accepted, 1);
 	add_filter(&comment, 0, comment_0);
 	add_filter(&comment, 1, comment_1);
+	printf("comment: %d\n", get_token(&comment, comment_str));
+	printf("comment2: %d\n", get_token(&comment, comment_str+20));
+	printf("\n");
 
 	//identifier
+	char identifier_str[] = "this_is;my_string = 41;";
 	int identifier_accepted[] = {1,2};
 	DFA identifier = create_DFA(0, 2, identifier_accepted, 2);
 	add_filter(&identifier, 0, identifier_0);
-	printf("%d\n", get_token(&identifier, str));
-	printf("%d\n", get_token(&identifier, str+8));
+	printf("identifier: %d\n", get_token(&identifier, identifier_str));
+	printf("identifier 2: %d\n", get_token(&identifier, identifier_str+8));
+	printf("\n");
+
+	//literal
+	char literal_str[] = "15.08;1234567;1423l123";
+	int literal_accepted[] = {2, 3};
+	DFA literal = create_DFA(0, 3, literal_accepted, 2);
+	add_filter(&literal, 0, literal_0);
+	add_filter(&literal, 1, literal_1);
+	printf("literal: %d\n", get_token(&literal, literal_str));
+	printf("literal 2: %d\n", get_token(&literal, literal_str+6));
+	printf("literal 3: %d\n", get_token(&literal, literal_str+14));
+
 
 	destroy_DFA(&comment);
 	destroy_DFA(&identifier);
+	destroy_DFA(&literal);
 }
