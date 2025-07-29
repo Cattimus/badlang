@@ -32,7 +32,7 @@ typedef struct
 	int* accepted_states;
 	int accepted_state_count;
 	filter** transitions; //array of filters for different states
-	int* transition_count;
+	int* transition_count; //how many transitions each state has
 }DFA;
 
 DFA create_DFA(int initial_state, int max_state, int* accepted_states, int accepted_state_count)
@@ -108,6 +108,35 @@ int add_filter(DFA* dfa, int state, filter transition)
 	return 1;
 }
 
+int is_accepted(DFA* dfa, const char* str)
+{
+	size_t len = strlen(str);
+	int state = dfa->initial_state;
+	for(size_t i = 0; i < len; i++)
+	{
+		char c = str[i];
+		//go through each transition until we hit one that is acceptable
+		for(size_t j = 0; j < (size_t)dfa->transition_count[state]; j++)
+		{
+			int temp_state = dfa->transitions[state][j](c);
+			if(temp_state)
+			{
+				state = temp_state;
+				break;
+			}
+		}
+	}
+
+	for(size_t i = 0; i < (size_t)dfa->accepted_state_count; i++)
+	{
+		if(state == dfa->accepted_states[i])
+		{
+			return 1;
+		}
+	}
+	return 0;
+}
+
 void init_classifiers()
 {
 	classify['\n'] = whitespace;
@@ -150,7 +179,35 @@ void init_classifiers()
 	}
 }
 
+int comment_0(char c)
+{
+	if(c == '/')
+	{
+		return 1;
+	}
+	return 0;
+}
+
+int comment_1(char c)
+{
+	if(c == '\n')
+	{
+		return 2;
+	}
+	else
+	{
+		return 1;
+	}
+}
+
 int main() 
 {
 	init_classifiers();
+
+	int accepted_states[] = {2};
+	DFA comment = create_DFA(0, 2, accepted_states, 1);
+	add_filter(&comment, 0, comment_0);
+	add_filter(&comment, 1, comment_1);
+	printf("%d\n", is_accepted(&comment, "//this is a comment\n"));
+	destroy_DFA(&comment);
 }
