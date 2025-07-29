@@ -307,6 +307,81 @@ int main()
 	printf("literal: %d\n", get_token(&literal, literal_str));
 	printf("literal 2: %d\n", get_token(&literal, literal_str+6));
 	printf("literal 3: %d\n", get_token(&literal, literal_str+14));
+	printf("\n\n");
+
+
+	//time to actually do the parsing
+	//TODO - account for things happening at the end of the string
+	char str[] = "//this is my comment\nlars = 18.1942;lars = lars * 15;lars + 24;lars - 15;24 / 18 ";
+	size_t len = strlen(str);
+	for(size_t i = 0; i < len; i++)
+	{
+		Token c = classify[(size_t)str[i]];
+		switch(c)
+		{
+			case backslash:
+			{
+				int sz = get_token(&comment, str+i);
+				i += sz;
+				if(sz == 0)
+				{
+					printf("divide: %d\n", 1);
+				}
+				else
+				{
+					printf("comment: %d\n", sz);
+				}
+				break;
+			}
+
+			case letter:
+			{
+				int sz = get_token(&identifier, str+i);
+				i += sz;
+				printf("identifier: %d\n", sz);
+				break;
+			}
+
+			case digit:
+			{
+				int sz = get_token(&literal, str+i);
+				i += sz;
+				printf("literal: %d\n", sz);
+				break;
+			}
+
+			case add:
+				printf("add: %d\n", 1);
+				break;
+
+			case assign:
+				printf("assign: %d\n", 1);
+				break;
+
+			case subtract:
+				printf("subtract: %d\n", 1);
+				break;
+
+			case multiply:
+				printf("multiply: %d\n", 1);
+				break;
+
+			case divide:
+				printf("divide: %d\n", 1);
+				break;
+
+			case whitespace:
+				break;
+
+			case separator:
+				break;
+
+			default:
+				printf("Invalid character reached, aborting.");
+				exit(-1);
+				break;
+		}
+	}
 
 
 	destroy_DFA(&comment);
