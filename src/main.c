@@ -69,19 +69,21 @@ int eval_filter(filter f, char c)
 
 typedef struct
 {
-	filter** filters;
+	filter* filters;
 	int* filter_count;
+	int filter_row;
 	int* accepted_states;
 	int accepted_count;
 }DFA;
 
 //we want to avoid using dynamically allocated memory where possible,
 //so we will assume these are allocated on the stack or otherwise allocated by a future helper function
-DFA create_DFA(filter** filters, int* filter_count, int* accepted_states, int accepted_count)
+DFA create_DFA(filter* filters, int* filter_count, int filter_row, int* accepted_states, int accepted_count)
 {
 	DFA dfa;
 	dfa.filters = filters;
 	dfa.filter_count = filter_count;
+	dfa.filter_row = filter_row;
 	dfa.accepted_states = accepted_states;
 	dfa.accepted_count = accepted_count;
 	return dfa;
@@ -105,12 +107,13 @@ int eval_DFA(DFA* dfa, const char* str)
 {
 	int state = 0;
 	int len = strlen(str);
+	int y = dfa->filter_row;
 	for(int i = 0; i < len; i++)
 	{
 		char c = str[i];
 		for(int j = 0; j < dfa->filter_count[state]; j++)
 		{
-			int r = eval_filter(dfa->filters[state][j], c);
+			int r = eval_filter(dfa->filters[state * y + j], c);
 			if(r == -1)
 			{
 				return 0;
@@ -135,5 +138,20 @@ int eval_DFA(DFA* dfa, const char* str)
 
 int main() 
 {
+	filter filters[2 * 2];
 
+	//stinky version of 2d array access because c hates me
+	filters[0 * 2 + 0].accepted = "/";
+	filters[0 * 2 + 0].success_state = 1;
+	filters[1 * 2 + 0].rejected = "\n";
+	filters[1 * 2 + 0].success_state = 1;
+	filters[1 * 2 + 1].accepted = "\n";
+	filters[1 * 2 + 1].success_state = 2;
+
+	int filter_count[] = {1, 2};
+	int accepted_states[] = {2};
+
+	DFA dfa = create_DFA(filters, filter_count, 2, accepted_states, 1);
+	int result = eval_DFA(&dfa, "//this is a comment\n");
+	printf("result: %d\n", result);
 }
