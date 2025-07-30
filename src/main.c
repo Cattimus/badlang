@@ -11,7 +11,6 @@ typedef struct Filter
 	const char* accepted;
 	const char* rejected;
 	const char* fail;
-	int success_state;
 }Filter;
 
 typedef struct Filter_Node
@@ -28,7 +27,6 @@ Filter new_filter()
 	f.accepted = NULL;
 	f.rejected = NULL;
 	f.fail = NULL;
-	f.success_state = 0;
 	return f;
 }
 
@@ -69,7 +67,7 @@ int eval_filter(Filter f, char c)
 	{
 		if(contains(f.accepted, c))
 		{
-			return f.success_state;
+			return 1;
 		}
 	}
 
@@ -92,7 +90,7 @@ int eval_filter(Filter f, char c)
 	//if we've reached this point in the function, we should accept the input
 	if(!f.accepted)
 	{
-		return f.success_state;
+		return 1;
 	}
 
 	return 0;
@@ -131,31 +129,56 @@ int contains_int(int* accepted_states, int count, int state)
 
 //we will assume our string is null-terminated
 //we also assume we've read the first character of the string before passing it to eval
-int eval_DFA(DFA* dfa, const char* str)
+int match(DFA* dfa, const char* str)
 {
 	int len = strlen(str);
 	Filter_Node* f = dfa->filter;
-	for(int i = 0; i < len; i++)
+	int i = 0;
+	for(i = 0; i < len; i++)
 	{
 		char c = str[i];
 		Filter_Node* fc = f;
+		int fc_matched = 0;
 		do
 		{
-			if(eval_filter(fc->filter, c))
+			int r = eval_filter(fc->filter, c);
+			if(r == -1)
 			{
-				if(fc->accept == NULL)
+				return 0;
+			}
+
+			if(r)
+			{
+				if(!fc->accept)
 				{
 					return 0;
 				}
-
 				f = fc->accept;
+				fc_matched = 1;
+				break;
+			}
+			else
+			{
+				if(fc->next == NULL)
+				{
+					return 0;
+				}
+				fc = fc->next;
 			}
 		}while(fc->next != NULL);
+
+		//break out if we don't find a valid match by this point
+		if(!fc_matched)
+		{
+			break;
+		}
 	}
 
 	if(contains_int(dfa->accepted_states, dfa->accepted_count, f->state))
 	{
-		return 1;
+		printf("Current state: %d\n", f->state);
+		printf("Current character: %c\n", str[i]);
+		return i;
 	}
 
 	return 0;
@@ -172,10 +195,13 @@ int main()
 
 	filters[0].filter.accepted = "0123456789";
 	filters[0].state = 0;
+
 	filters[1].filter.accepted = "0123456789";
 	filters[1].state = 1;
+
 	filters[2].filter.accepted = ".";
 	filters[2].state = 1;
+
 	filters[3].filter.accepted = "0123456789";
 	filters[3].state = 2;
 
@@ -194,5 +220,5 @@ int main()
 	dfa.accepted_states = accepted_states;
 	dfa.filter = filters;
 
-	printf("%d\n", eval_DFA(&dfa, "191231923"));
+	printf("%d\n", match(&dfa, "191.23l1923"));
 }
