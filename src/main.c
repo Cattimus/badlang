@@ -9,11 +9,11 @@ typedef struct
 	const char* rejected;
 	const char* fail;
 	int success_state;
-}filter;
+}Filter;
 
-filter new_filter()
+Filter new_filter()
 {
-	filter f;
+	Filter f;
 	f.accepted = NULL;
 	f.rejected = NULL;
 	f.fail = NULL;
@@ -42,7 +42,7 @@ int contains(const char* str, char c)
 }
 
 //evaluate a filter
-int eval_filter(filter f, char c)
+int eval_filter(Filter f, char c)
 {
 	if(f.accepted)
 	{
@@ -79,7 +79,7 @@ int eval_filter(filter f, char c)
 
 typedef struct
 {
-	filter* filters;
+	Filter* filters;
 	int* filter_count;
 	int filter_row;
 	int* accepted_states;
@@ -88,7 +88,7 @@ typedef struct
 
 //we want to avoid using dynamically allocated memory where possible,
 //so we will assume these are allocated on the stack or otherwise allocated by a future helper function
-DFA create_DFA(filter* filters, int* filter_count, int filter_row, int* accepted_states, int accepted_count)
+DFA create_DFA(Filter* filters, int* filter_count, int filter_row, int* accepted_states, int accepted_count)
 {
 	DFA dfa;
 	dfa.filters = filters;
@@ -119,7 +119,7 @@ int eval_DFA(DFA* dfa, const char* str)
 	int state = 0;
 	int len = strlen(str);
 	int y = dfa->filter_row;
-	for(int i = 1; i < len; i++)
+	for(int i = 0; i < len; i++)
 	{
 		char c = str[i];
 		for(int j = 0; j < dfa->filter_count[state]; j++)
@@ -146,32 +146,83 @@ int eval_DFA(DFA* dfa, const char* str)
 	return 0;
 }
 
+int longest_match(DFA* dfa, const char* str)
+{
+	int state = 0;
+	int len = strlen(str);
+	int y = dfa->filter_row;
+	int i = 0;
+	for(i = 0; i < len; i++)
+	{
+		char c = str[i];
+		for(int j = 0; j < dfa->filter_count[state]; j++)
+		{
+			int r = eval_filter(dfa->filters[state * y + j], c);
+			if(r == -1)
+			{
+				if(contains_int(dfa->accepted_states, dfa->accepted_count, state))
+				{
+					return i-1;
+				}
+
+				return 0;
+			}
+
+			if(r)
+			{
+				state = r;
+				break;
+			}
+		}
+	}
+
+	if(contains_int(dfa->accepted_states, dfa->accepted_count, state))
+	{
+		return i;
+	}
+
+	return 0;
+}
+
+int arr2d(int x, int y, int row_size)
+{
+	return y*row_size + x;
+}
+
+typedef struct _Filter_Node
+{
+	int state;
+	Filter filter;
+	struct _Filter_Node* accept;
+	struct _Filter_Node* next;
+}Filter_Node;
+
+Filter_Node new_node()
+{
+	Filter_Node n;
+	n.accept = NULL;
+	n.next = NULL;
+	n.filter = new_filter();
+	n.state = -1;
+}
 
 int main() 
 {
-	filter filters[2 * 2];
+	Filter_Node filters[4];
 
 	for(int i = 0; i < 4; i++)
 	{
-		filters[i] = new_filter();
+		filters[i] = new_node();
 	}
 
-	//stinky version of 2d array access because c hates me
-	filters[0 * 2 + 0].accepted = "/";
-	filters[0 * 2 + 0].success_state = 1;
-	filters[1 * 2 + 0].rejected = "\n";
-	filters[1 * 2 + 0].success_state = 1;
-	filters[1 * 2 + 1].accepted = "\n";
-	filters[1 * 2 + 1].success_state = 2;
+	filters[0].filter.accepted = "0123456789";
+	filters[1].filter.accepted = "0123456789";
+	filters[2].filter.accepted = ".";
+	filters[3].filter.accepted = "0123456789";
 
-	int filter_count[] = {1, 2};
-	int accepted_states[] = {2};
-	const char* str = "//this is a comment\n";
-	const char* str2 = "this is not a comment\n";
-
-	DFA dfa = create_DFA(filters, filter_count, 2, accepted_states, 1);
-	int result = eval_DFA(&dfa, str);
-	int result2 = eval_DFA(&dfa, str2);
-	printf("result: %d\n", result);
-	printf("result2: %d\n", result2);
+	filters[0].accept = &filters[1];
+	filters[1].accept = &filters[1];
+	filters[1].next = &filters[2];
+	filters[2].accept = &filters[3];
+	filters[3].accept = &filters[3];
 }
