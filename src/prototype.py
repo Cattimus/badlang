@@ -23,7 +23,7 @@ class filter:
 		return False
 
 		
-class DSA:
+class DFA:
 	filters = []
 	accepted_states = []
 
@@ -42,7 +42,7 @@ class DSA:
 		else:
 			return False
 		
-#we'll make a DSA for comment, since it is reasonably complex
+#we'll make a DFA for comment, since it is reasonably complex
 #for this we're using the array representation of graphs, since it uses less memory than adjacency matrices\
 
 comment_0 = filter()
@@ -61,7 +61,7 @@ c = [
 	[(comment_1, 1), (comment_2, 2)]
 ]
 
-comment = DSA()
+comment = DFA()
 comment.accepted_states = [2]
 comment.filters = c
 print(comment.eval("//This is not a comment\n"))
