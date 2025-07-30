@@ -2,14 +2,25 @@
 #include <string.h>
 #include <stdlib.h>
 
+typedef struct Filter_Node Filter_Node;
+typedef struct Filter Filter;
+typedef struct DFA DFA;
 
-typedef struct
+typedef struct Filter
 {
 	const char* accepted;
 	const char* rejected;
 	const char* fail;
 	int success_state;
 }Filter;
+
+typedef struct Filter_Node
+{
+	int state;
+	Filter filter;
+	struct Filter_Node* accept;
+	struct Filter_Node* next;
+}Filter_Node;
 
 Filter new_filter()
 {
@@ -19,6 +30,16 @@ Filter new_filter()
 	f.fail = NULL;
 	f.success_state = 0;
 	return f;
+}
+
+Filter_Node new_node()
+{
+	Filter_Node n;
+	n.accept = NULL;
+	n.next = NULL;
+	n.filter = new_filter();
+	n.state = -1;
+	return n;
 }
 
 //check if string contains character
@@ -77,23 +98,19 @@ int eval_filter(Filter f, char c)
 	return 0;
 }
 
-typedef struct
+typedef struct DFA
 {
-	Filter* filters;
-	int* filter_count;
-	int filter_row;
+	Filter_Node* filter;
 	int* accepted_states;
 	int accepted_count;
 }DFA;
 
 //we want to avoid using dynamically allocated memory where possible,
 //so we will assume these are allocated on the stack or otherwise allocated by a future helper function
-DFA create_DFA(Filter* filters, int* filter_count, int filter_row, int* accepted_states, int accepted_count)
+DFA create_DFA(Filter_Node* filter, int* accepted_states, int accepted_count)
 {
 	DFA dfa;
-	dfa.filters = filters;
-	dfa.filter_count = filter_count;
-	dfa.filter_row = filter_row;
+	dfa.filter = filter;
 	dfa.accepted_states = accepted_states;
 	dfa.accepted_count = accepted_count;
 	return dfa;
@@ -116,94 +133,32 @@ int contains_int(int* accepted_states, int count, int state)
 //we also assume we've read the first character of the string before passing it to eval
 int eval_DFA(DFA* dfa, const char* str)
 {
-	int state = 0;
 	int len = strlen(str);
-	int y = dfa->filter_row;
+	Filter_Node* f = dfa->filter;
 	for(int i = 0; i < len; i++)
 	{
 		char c = str[i];
-		for(int j = 0; j < dfa->filter_count[state]; j++)
+		Filter_Node* fc = f;
+		do
 		{
-			int r = eval_filter(dfa->filters[state * y + j], c);
-			if(r == -1)
+			if(eval_filter(fc->filter, c))
 			{
-				return 0;
-			}
+				if(fc->accept == NULL)
+				{
+					return 0;
+				}
 
-			if(r)
-			{
-				state = r;
-				break;
+				f = fc->accept;
 			}
-		}
+		}while(fc->next != NULL);
 	}
 
-	if(contains_int(dfa->accepted_states, dfa->accepted_count, state))
+	if(contains_int(dfa->accepted_states, dfa->accepted_count, f->state))
 	{
 		return 1;
 	}
 
 	return 0;
-}
-
-int longest_match(DFA* dfa, const char* str)
-{
-	int state = 0;
-	int len = strlen(str);
-	int y = dfa->filter_row;
-	int i = 0;
-	for(i = 0; i < len; i++)
-	{
-		char c = str[i];
-		for(int j = 0; j < dfa->filter_count[state]; j++)
-		{
-			int r = eval_filter(dfa->filters[state * y + j], c);
-			if(r == -1)
-			{
-				if(contains_int(dfa->accepted_states, dfa->accepted_count, state))
-				{
-					return i-1;
-				}
-
-				return 0;
-			}
-
-			if(r)
-			{
-				state = r;
-				break;
-			}
-		}
-	}
-
-	if(contains_int(dfa->accepted_states, dfa->accepted_count, state))
-	{
-		return i;
-	}
-
-	return 0;
-}
-
-int arr2d(int x, int y, int row_size)
-{
-	return y*row_size + x;
-}
-
-typedef struct _Filter_Node
-{
-	int state;
-	Filter filter;
-	struct _Filter_Node* accept;
-	struct _Filter_Node* next;
-}Filter_Node;
-
-Filter_Node new_node()
-{
-	Filter_Node n;
-	n.accept = NULL;
-	n.next = NULL;
-	n.filter = new_filter();
-	n.state = -1;
 }
 
 int main() 
@@ -216,13 +171,28 @@ int main()
 	}
 
 	filters[0].filter.accepted = "0123456789";
+	filters[0].state = 0;
 	filters[1].filter.accepted = "0123456789";
+	filters[1].state = 1;
 	filters[2].filter.accepted = ".";
+	filters[2].state = 1;
 	filters[3].filter.accepted = "0123456789";
+	filters[3].state = 2;
 
 	filters[0].accept = &filters[1];
+
 	filters[1].accept = &filters[1];
 	filters[1].next = &filters[2];
+
 	filters[2].accept = &filters[3];
 	filters[3].accept = &filters[3];
+
+	int accepted_states[2] = {1,2};
+
+	DFA dfa;
+	dfa.accepted_count = 2;
+	dfa.accepted_states = accepted_states;
+	dfa.filter = filters;
+
+	printf("%d\n", eval_DFA(&dfa, "191231923"));
 }
