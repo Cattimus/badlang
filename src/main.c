@@ -159,13 +159,9 @@ int match(DFA* dfa, const char* str)
 			}
 			else
 			{
-				if(fc->next == NULL)
-				{
-					return 0;
-				}
 				fc = fc->next;
 			}
-		}while(fc->next != NULL);
+		}while(fc);
 
 		//break out if we don't find a valid match by this point
 		if(!fc_matched)
@@ -176,8 +172,6 @@ int match(DFA* dfa, const char* str)
 
 	if(contains_int(dfa->accepted_states, dfa->accepted_count, f->state))
 	{
-		printf("Current state: %d\n", f->state);
-		printf("Current character: %c\n", str[i]);
 		return i;
 	}
 
@@ -220,5 +214,5 @@ int main()
 	dfa.accepted_states = accepted_states;
 	dfa.filter = filters;
 
-	printf("%d\n", match(&dfa, "191.23l1923"));
+	printf("%d\n", match(&dfa, "191.231923"));
 }
