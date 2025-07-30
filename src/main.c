@@ -113,12 +113,13 @@ int contains_int(int* accepted_states, int count, int state)
 }
 
 //we will assume our string is null-terminated
+//we also assume we've read the first character of the string before passing it to eval
 int eval_DFA(DFA* dfa, const char* str)
 {
 	int state = 0;
 	int len = strlen(str);
 	int y = dfa->filter_row;
-	for(int i = 0; i < len; i++)
+	for(int i = 1; i < len; i++)
 	{
 		char c = str[i];
 		for(int j = 0; j < dfa->filter_count[state]; j++)
@@ -166,8 +167,11 @@ int main()
 	int filter_count[] = {1, 2};
 	int accepted_states[] = {2};
 	const char* str = "//this is a comment\n";
+	const char* str2 = "this is not a comment\n";
 
 	DFA dfa = create_DFA(filters, filter_count, 2, accepted_states, 1);
 	int result = eval_DFA(&dfa, str);
+	int result2 = eval_DFA(&dfa, str2);
 	printf("result: %d\n", result);
+	printf("result2: %d\n", result2);
 }
