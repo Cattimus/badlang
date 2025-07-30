@@ -11,6 +11,16 @@ typedef struct
 	int success_state;
 }filter;
 
+filter new_filter()
+{
+	filter f;
+	f.accepted = NULL;
+	f.rejected = NULL;
+	f.fail = NULL;
+	f.success_state = 0;
+	return f;
+}
+
 //check if string contains character
 int contains(const char* str, char c)
 {
@@ -140,6 +150,11 @@ int main()
 {
 	filter filters[2 * 2];
 
+	for(int i = 0; i < 4; i++)
+	{
+		filters[i] = new_filter();
+	}
+
 	//stinky version of 2d array access because c hates me
 	filters[0 * 2 + 0].accepted = "/";
 	filters[0 * 2 + 0].success_state = 1;
@@ -150,8 +165,9 @@ int main()
 
 	int filter_count[] = {1, 2};
 	int accepted_states[] = {2};
+	const char* str = "//this is a comment\n";
 
 	DFA dfa = create_DFA(filters, filter_count, 2, accepted_states, 1);
-	int result = eval_DFA(&dfa, "//this is a comment\n");
+	int result = eval_DFA(&dfa, str);
 	printf("result: %d\n", result);
 }
