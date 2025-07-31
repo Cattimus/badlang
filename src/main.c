@@ -11,6 +11,7 @@ typedef struct Filter
 	const char* accepted;
 	const char* rejected;
 	const char* fail;
+	int reject_all;
 }Filter;
 
 typedef struct Filter_Node
@@ -26,6 +27,7 @@ Filter new_filter()
 	f.accepted = NULL;
 	f.rejected = NULL;
 	f.fail = NULL;
+	f.reject_all = 0;
 	return f;
 }
 
@@ -61,6 +63,11 @@ int contains(const char* str, char c)
 //evaluate a filter
 int eval_filter(Filter f, char c)
 {
+	if(f.reject_all)
+	{
+		return 0;
+	}
+
 	if(f.accepted)
 	{
 		if(contains(f.accepted, c))
@@ -174,33 +181,82 @@ int match(DFA* dfa, const char* str)
 
 int main() 
 {
-	Filter_Node filters[4];
+	Filter_Node literal_filter[4];
 
 	for(int i = 0; i < 4; i++)
 	{
-		filters[i] = new_node();
+		literal_filter[i] = new_node();
 	}
 
-	filters[0].filter.accepted = "0123456789";
-	filters[0].accept = 1;
+	literal_filter[0].filter.accepted = "0123456789";
+	literal_filter[0].accept = 1;
 
-	filters[1].filter.accepted = ".";
-	filters[1].accept = 2;
-	filters[1].next = &filters[3];
+	literal_filter[1].filter.accepted = ".";
+	literal_filter[1].accept = 2;
+	literal_filter[1].next = &literal_filter[3];
 
-	filters[2].filter.accepted = "0123456789";
-	filters[2].accept = 2;
+	literal_filter[2].filter.accepted = "0123456789";
+	literal_filter[2].accept = 2;
 
-	filters[3].filter.accepted = "0123456789";
-	filters[3].accept = 1;
+	literal_filter[3].filter.accepted = "0123456789";
+	literal_filter[3].accept = 1;
 
-	int accepted_states[2] = {1,2};
+	int literal_accepted[2] = {1,2};
 
-	DFA dfa;
-	dfa.accepted_count = 2;
-	dfa.accepted_states = accepted_states;
-	dfa.filter = filters;
+	DFA literal;
+	literal.accepted_count = 2;
+	literal.accepted_states = literal_accepted;
+	literal.filter = literal_filter;
 
 	char str[] = "191.231L123123";
-	printf("matching string for literal: %.*s\n", match(&dfa, str), str);
+	printf("matching string for literal: %.*s\n", match(&literal, str), str);
+
+
+	Filter_Node comment_filter[9];
+
+	for(int i = 0; i < 9; i++)
+	{
+		comment_filter[i] = new_node();
+	}
+
+	comment_filter[0].filter.accepted = "/";
+	comment_filter[0].accept = 1;
+
+	comment_filter[1].filter.accepted = "*";
+	comment_filter[1].accept = 3;
+	comment_filter[1].next = &comment_filter[6];
+
+	comment_filter[2].filter.reject_all = 1;
+
+	comment_filter[3].filter.accepted = "*";
+	comment_filter[3].accept = 4;
+	comment_filter[3].next = &comment_filter[7];
+
+	comment_filter[4].filter.accepted = "/";
+	comment_filter[4].accept = 5;
+	comment_filter[4].next = &comment_filter[8];
+
+	comment_filter[5].filter.reject_all = 1;
+
+	//create path from 1 to 2
+	comment_filter[6].filter.rejected = "*";
+	comment_filter[6].accept = 2;
+
+	//create path from 3 to 3
+	comment_filter[7].filter.rejected = "*";
+	comment_filter[7].accept = 3;
+
+	//create path from 4 to 3
+	comment_filter[8].filter.rejected = "/";
+	comment_filter[8].accept = 3;
+
+	int comment_accepted[] = {5};
+
+	DFA comment;
+	comment.accepted_count = 1;
+	comment.accepted_states = comment_accepted;
+	comment.filter = comment_filter;
+
+	char comment_str[] = "/*This\nis\na\nmultiline comment\nand\nit works*/";
+	printf("matching string for multiline comment: %.*s\n", match(&comment, comment_str), comment_str);
 }
