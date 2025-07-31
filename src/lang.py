@@ -19,6 +19,7 @@ class Type(Enum):
 class Node:
 	left = None
 	right = None
+	lex_type = None
 	value = None
 
 #first we run our program through a lexer
@@ -69,7 +70,21 @@ def lex(s):
 		
 	return symbols
 
+#create visual representation of tree
+def ident_from_node(root):
+	return f'"{root.lex_type}\n{root.value}"'
+
+def tree_to_graph(root, output):
+	if root.left != None:
+		output += ident_from_node(root) + " -- " + ident_from_node(root.left) + "\n"
+		tree_to_graph(root.left, output)
+	
+	if root.right != None:
+		output += ident_from_node(root) + " -- " + ident_from_node(root.right) + "\n"
+		tree_to_graph(root.right, output)
+
+	return output
+
+# get symbols from program/string input
 program = "14 + l + 21 - 9 + 13"
 symbols = lex(program)
-for symbol in symbols:
-	print(f"{symbol[0]}, {symbol[1]}")
