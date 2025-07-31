@@ -21,8 +21,6 @@ class Node:
 	right = None
 	value = None
 
-program = "14 + 21 - 9 + 13"
-
 #first we run our program through a lexer
 def lex(s):
 	symbols = []
@@ -55,7 +53,7 @@ def lex(s):
 		
 		#identifier
 		elif s[i].isalpha():
-			l = literal.search(s, i)
+			l = identifier.search(s, i)
 			if l != None:
 				l = l.group(0)
 				i += len(l)
@@ -71,7 +69,7 @@ def lex(s):
 		
 	return symbols
 
-
+program = "14 + l + 21 - 9 + 13"
 symbols = lex(program)
 for symbol in symbols:
 	print(f"{symbol[0]}, {symbol[1]}")
