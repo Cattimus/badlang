@@ -15,10 +15,9 @@ typedef struct Filter
 
 typedef struct Filter_Node
 {
-	int state;
+	int accept;
 	Filter filter;
-	struct Filter_Node* accept;
-	struct Filter_Node* next;
+	Filter_Node* next;
 }Filter_Node;
 
 Filter new_filter()
@@ -33,10 +32,9 @@ Filter new_filter()
 Filter_Node new_node()
 {
 	Filter_Node n;
-	n.accept = NULL;
+	n.accept = -1;
 	n.next = NULL;
 	n.filter = new_filter();
-	n.state = -1;
 	return n;
 }
 
@@ -128,16 +126,16 @@ int contains_int(int* accepted_states, int count, int state)
 }
 
 //we will assume our string is null-terminated
-//we also assume we've read the first character of the string before passing it to eval
 int match(DFA* dfa, const char* str)
 {
+	int state = 0;
 	int len = strlen(str);
 	Filter_Node* f = dfa->filter;
 	int i = 0;
 	for(i = 0; i < len; i++)
 	{
 		char c = str[i];
-		Filter_Node* fc = f;
+		Filter_Node* fc = &f[state];
 		int fc_matched = 0;
 		do
 		{
@@ -149,11 +147,7 @@ int match(DFA* dfa, const char* str)
 
 			if(r)
 			{
-				if(!fc->accept)
-				{
-					return 0;
-				}
-				f = fc->accept;
+				state = fc->accept;
 				fc_matched = 1;
 				break;
 			}
@@ -170,7 +164,7 @@ int match(DFA* dfa, const char* str)
 		}
 	}
 
-	if(contains_int(dfa->accepted_states, dfa->accepted_count, f->state))
+	if(contains_int(dfa->accepted_states, dfa->accepted_count, state))
 	{
 		return i;
 	}
@@ -188,24 +182,17 @@ int main()
 	}
 
 	filters[0].filter.accepted = "0123456789";
-	filters[0].state = 0;
+	filters[0].accept = 1;
 
-	filters[1].filter.accepted = "0123456789";
-	filters[1].state = 1;
+	filters[1].filter.accepted = ".";
+	filters[1].accept = 2;
+	filters[1].next = &filters[3];
 
-	filters[2].filter.accepted = ".";
-	filters[2].state = 1;
+	filters[2].filter.accepted = "0123456789";
+	filters[2].accept = 2;
 
 	filters[3].filter.accepted = "0123456789";
-	filters[3].state = 2;
-
-	filters[0].accept = &filters[1];
-
-	filters[1].accept = &filters[1];
-	filters[1].next = &filters[2];
-
-	filters[2].accept = &filters[3];
-	filters[3].accept = &filters[3];
+	filters[3].accept = 1;
 
 	int accepted_states[2] = {1,2};
 
@@ -214,5 +201,6 @@ int main()
 	dfa.accepted_states = accepted_states;
 	dfa.filter = filters;
 
-	printf("%d\n", match(&dfa, "191.231923"));
+	char str[] = "191.231L123123";
+	printf("matching string for literal: %.*s\n", match(&dfa, str), str);
 }
