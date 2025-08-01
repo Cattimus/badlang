@@ -35,7 +35,7 @@ def lex(s):
 			if l != None:
 				l = l.group(0)
 				i += len(l)
-				symbols.append((Type.literal, l))
+				symbols.append((Type.literal, int(l)))
 
 		#search for comments
 		elif s[i] == '/':
@@ -143,37 +143,17 @@ for symbol in symbols:
 
 #evaluate tree using a stack method
 def eval_tree(root):
-	stack = []
+	result = root.left.value
 
-	#we want to get to the bottom of the tree
-	#we crawl through the tree and assign operators to the stack
-	while root.left != None and root.right != None:
-		if root.lex_type == Type.operator:
-			stack.append(root)
-
-		if root.left.lex_type == Type.operator:
-			root = root.left
+	while root:
+		roperand = root.right.left.value
+		if root.value == '+':
+			result += roperand
+		elif root.value == '-':
+			result -= roperand
 		
-		if root.right.lex_type == Type.operator:
-			root = root.right
+		root = root.right
 	
-	#at this point, we can evaluate expressions one by one
-	result = 0
-	while stack:
-		e = stack.pop()
-		left = 0
-		right = 0
+	return root
 
-		if e.left:
-			left = e.left.value
-		if e.right:
-			right = e.right.value
-		if e.right.lex_type == Type.operator:
-			right = result
-
-		if e.value == '+':
-			result = left + right
-		if e.value == '-':
-			result = left - right
-
-	return result
+print(eval_tree(root))
