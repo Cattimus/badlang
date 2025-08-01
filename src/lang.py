@@ -111,7 +111,6 @@ symbols = lex(program)
 root = Node()
 root.name = 'a'
 cursor = root
-
 current_name = 'b'
 
 for symbol in symbols:
@@ -124,7 +123,6 @@ for symbol in symbols:
 	if symbol[0] == Type.literal or symbol[0] == Type.identifier:
 		if cursor.left != None and cursor.right == None:
 			cursor.right = c
-			cursor = cursor.right
 		elif cursor.left == None:
 			cursor.left = c
 
@@ -138,8 +136,9 @@ for symbol in symbols:
 
 		#rotate values
 		else:
-			temp = cursor
-			cursor = c
+			temp = cursor.right
+			cursor.right = c
+			cursor = cursor.right
 			cursor.left = temp
 
 print(tree_str(root))
