@@ -137,9 +137,38 @@ def assemble_tree(symbols):
 
 	return root
 
+def eval_tree(root):
+	stack = []
+
+	#create a stack with our operators
+	while root.left and root.right:
+		stack.append(root)
+	
+		if root.right.lex_type == Type.identifier or root.right.lex_type == Type.literal:
+			break
+
+		root = root.right
+
+	result = 0
+	while stack:
+		c = stack.pop()
+		left = c.right.value
+		right = c.left.value
+
+		if c.right.lex_type == Type.operator:
+			left = result
+
+		if c.value == '+':
+			result = left + right
+		elif c.value == '-':
+			result = left - right
+
+	return result
+		
+
 
 # get symbols from program/string input
 program = "14 + 8 + 21 - 9 + 13"
 symbols = lex(program)
 root = assemble_tree(symbols)
-print(tree_str(root))
+print(eval_tree(root))
