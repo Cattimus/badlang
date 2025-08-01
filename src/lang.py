@@ -104,56 +104,42 @@ def tree_str(root):
 	output += "}"
 	return output
 
+def node_from_tuple(tup):
+	n = Node()
+	n.lex_type = tup[0]
+	n.value = tup[1]
+	return n
+
+def next_name(name):
+	return chr(ord(name)+1)
+
+def assemble_tree(symbols):
+	root = node_from_tuple(symbols[1])
+	root.name = 'a'
+	root.left = node_from_tuple(symbols[0])
+	root.left.name = 'b'
+	root.right = node_from_tuple(symbols[2])
+	root.right.name = 'c'
+
+	current_name = 'd'
+
+	for i in range(3, len(symbols)):
+		c = node_from_tuple(symbols[i])
+		c.name = current_name
+		current_name = next_name(current_name)
+
+		if c.lex_type == Type.operator:
+			c.right = root
+			root = c
+
+		elif c.lex_type == Type.identifier or c.lex_type == Type.literal:
+			root.left = c
+
+	return root
+
+
 # get symbols from program/string input
 program = "14 + 8 + 21 - 9 + 13"
 symbols = lex(program)
-
-root = Node()
-root.name = 'a'
-cursor = root
-current_name = 'b'
-
-for symbol in symbols:
-	c = Node()
-	c.lex_type = symbol[0]
-	c.value = symbol[1]
-	c.name = current_name
-	current_name = chr(ord(current_name)+1)
-
-	if symbol[0] == Type.literal or symbol[0] == Type.identifier:
-		if cursor.left != None and cursor.right == None:
-			cursor.right = c
-		elif cursor.left == None:
-			cursor.left = c
-
-	elif symbol[0] == Type.operator:
-		if cursor.lex_type == None:
-			cursor.lex_type = c.lex_type
-			cursor.value = c.value
-		elif cursor.right == None:
-			cursor.right = c
-			cursor = cursor.right
-
-		#rotate values
-		else:
-			temp = cursor.right
-			cursor.right = c
-			cursor = cursor.right
-			cursor.left = temp
-
-#evaluate tree using a stack method
-def eval_tree(root):
-	result = root.left.value
-
-	while root:
-		roperand = root.right.left.value
-		if root.value == '+':
-			result += roperand
-		elif root.value == '-':
-			result -= roperand
-		
-		root = root.right
-	
-	return root
-
-print(eval_tree(root))
+root = assemble_tree(symbols)
+print(tree_str(root))
