@@ -105,7 +105,7 @@ def tree_str(root):
 	return output
 
 # get symbols from program/string input
-program = "14 + l + 21 - 9 + 13"
+program = "14 + 8 + 21 - 9 + 13"
 symbols = lex(program)
 
 root = Node()
@@ -141,4 +141,39 @@ for symbol in symbols:
 			cursor = cursor.right
 			cursor.left = temp
 
-print(tree_str(root))
+#evaluate tree using a stack method
+def eval_tree(root):
+	stack = []
+
+	#we want to get to the bottom of the tree
+	#we crawl through the tree and assign operators to the stack
+	while root.left != None and root.right != None:
+		if root.lex_type == Type.operator:
+			stack.append(root)
+
+		if root.left.lex_type == Type.operator:
+			root = root.left
+		
+		if root.right.lex_type == Type.operator:
+			root = root.right
+	
+	#at this point, we can evaluate expressions one by one
+	result = 0
+	while stack:
+		e = stack.pop()
+		left = 0
+		right = 0
+
+		if e.left:
+			left = e.left.value
+		if e.right:
+			right = e.right.value
+		if e.right.lex_type == Type.operator:
+			right = result
+
+		if e.value == '+':
+			result = left + right
+		if e.value == '-':
+			result = left - right
+
+	return result
