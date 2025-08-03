@@ -135,20 +135,49 @@ def parse_expression(symbols):
 			e.operator = stack.pop()
 			e.left = stack.pop()
 			expressions.append(e)
-	return (expressions, total)
+	return (expressions.pop(), total)
 
+def eval_expr(expression):
+	return 0
 
+#parse and complete assignment
+def parse_assignment(symbols):
+	global variables
 
+	if not symbols[0][1] in variables:
+		variables[symbols[0][1]] = 0
+	
+	expression, total = parse_expression(symbols[2:])
+	variables[symbols[0][1]] = eval_expr(expression)
+	return total + 2
 
+#parse symbol list
+def parse_symbols(symbols):
+	global variables
 
+	#first we need to determine what kind of expression we have
+	if len(symbols < 3):
+		print("Not enough symbols")
+		exit(-1)
 
+	#this is the signature of an assignment
+	if symbols[0][0] == identifier and symbols[1][1] == '=':
+		total = parse_assignment(symbols)
+		return total
+	
+	else:
+		expression, total = parse_expression(symbols)
+		print(f"Empty expression: {eval_expr(expression)}")
+		return total
 
 program = '''
 var = 14 + 21 + 19 + 41 - 12;
 1 + 2 + 3 + 4 + 5 + 6;
 val = var + 4;
 '''
+variables = {}
 symbols = lex(program)
 expressions, identifiers = parse_symbols(symbols)
 expressions[0].eval()
-print(identifiers['var'])
+print(variables["var"])
+print(variables["val"])
