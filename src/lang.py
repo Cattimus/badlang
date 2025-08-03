@@ -31,18 +31,31 @@ class Binary_Expression(Unit):
 		self.data_type = Type.expression
 
 	def eval(self):
-		if self.left.data_type == Type.expression:
-			self.left.eval()
+		if not self.right or not self.left:
+			return
 
 		if self.right.data_type == Type.expression:
 			self.right.eval()
 
+		if self.left.data_type == Type.expression:
+			self.left.eval()
+
 		if self.operator == '+':
+			print(f"{self.left.value}, {self.right.value}")
 			self.value = self.left.value + self.right.value
 		elif self.operator == '-':
 			self.value = self.left.value - self.right.value
 		elif self.operator == '=':
 			self.left.value = self.right.value
+
+	def print(self):
+		if self.left and self.left.data_type == Type.expression:
+			self.left.print()
+		
+		if self.right and self.right.data_type == Type.expression:
+			self.right.print()
+
+		print(f"left: {self.left}\nright: {self.right}")
 
 #identifier (has a name and a value)
 class Identifier(Unit):
@@ -125,17 +138,24 @@ def parse_symbols(symbols):
 				stack.append(Literal(symbol[1]))
 		
 		elif symbol[0] == Type.operator:
+			e = Binary_Expression()
+			e.operator = symbol[1]
+
 			if stack:
-				e = Binary_Expression()
-				e.operator = symbol[1]
 				e.left = stack.pop()
-				stack.push(e)
+				stack.append(e)
+			
+			#since there's nothing on the stack, we have to assume our left is the previous expression
 			else:
-				print("Error - operator with no expression")
-				exit(-1)
+				if not expressions:
+					print("Tried to pop expression - none available")
+					exit(-1)
+				e.left = expressions.pop()
+				stack.append(e)
+
 
 		elif symbol[0] == Type.identifier:
-			if not identifiers[symbol[1]]:
+			if not symbol[1] in identifiers:
 				identifiers[symbol[1]] = Identifier(symbol[1], 0)
 
 			if stack:
@@ -146,3 +166,9 @@ def parse_symbols(symbols):
 				stack.append(identifiers[symbol[1]])
 
 	return (expressions, identifiers)
+
+program = "var = 14 + 21 + 19 + 41"
+symbols = lex(program)
+expressions, identifiers = parse_symbols(symbols)
+expressions[0].eval()
+print(identifiers["var"].value)
