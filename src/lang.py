@@ -179,10 +179,15 @@ def parse_symbols(symbols):
 		return total
 
 program = '''
+val = 15 + 21 - 14;
 1 + 2 + 3 + 4 + 5;
+var = val + 4;
 '''
 symbols = lex(program)
 
 cursor = 0
 while cursor < len(symbols) - 1:
 	cursor += parse_symbols(symbols[cursor:])
+
+print(variables["val"])
+print(variables["var"])
