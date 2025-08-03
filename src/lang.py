@@ -109,21 +109,40 @@ def lex(s):
 		
 	return symbols
 
-e = Binary_Expression()
-l = Binary_Expression()
-r = Binary_Expression()
+#parse data into executable format
+def parse_symbols(symbols):
+	expressions = []
+	stack = []
+	identifiers = {}
 
-l.left = Literal(14)
-l.right = Literal(21)
-l.operator = '-'
+	for symbol in symbols:
+		if symbol[0] == Type.literal:
+			if stack:
+				e = stack.pop()
+				e.right = Literal(symbol[1])
+				expressions.append(e)
+			else:
+				stack.append(Literal(symbol[1]))
+		
+		elif symbol[0] == Type.operator:
+			if stack:
+				e = Binary_Expression()
+				e.operator = symbol[1]
+				e.left = stack.pop()
+				stack.push(e)
+			else:
+				print("Error - operator with no expression")
+				exit(-1)
 
-r.left = Literal(87)
-r.right = Literal(24)
-r.operator = '+'
+		elif symbol[0] == Type.identifier:
+			if not identifiers[symbol[1]]:
+				identifiers[symbol[1]] = Identifier(symbol[1], 0)
 
-e.left = l
-e.right = r
-e.operator = '+'
+			if stack:
+				e = stack.pop()
+				e.right = identifiers[symbol[0]]
+				expressions.append(e)
+			else:
+				stack.append(identifiers[symbol[1]])
 
-e.eval()
-print(e.value)
+	return (expressions, identifiers)
