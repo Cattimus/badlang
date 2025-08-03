@@ -164,11 +164,20 @@ def eval_tree(root):
 			result = left - right
 
 	return result
+
+#get identifiers from symbols
+def get_identifiers(symbols):
+	identifiers = {}
+	for symbol in symbols:
+		if symbol[0] == Type.identifier:
+			identifiers[symbol[1]] = 0
+	
+	return identifiers
 		
-
-
 # get symbols from program/string input
 program = "14 + 8 + 21 - 9 + 13"
 symbols = lex(program)
+identifiers = get_identifiers(symbols)
 root = assemble_tree(symbols)
-print(eval_tree(root))
+print("interpreted: ", eval_tree(root))
+print("reference: ", eval(program))
