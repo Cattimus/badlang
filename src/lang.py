@@ -38,7 +38,7 @@ class Literal(Unit):
 
 	def __init__(self, value):
 		self.data_type = Type.literal
-		value = value
+		self.value = value
 
 #first we run our program through a lexer
 def lex(s):
@@ -100,17 +100,20 @@ def parse_expression(symbols):
 	total = 0
 
 	for symbol in symbols:
-		if symbol[0] == Type.literal or symbol[0] == Type.operator:
+		if symbol[0] == Type.literal:
 			stack.append(Literal(symbol[1]))
+
+		elif symbol[0] == Type.operator:
+			stack.append(symbol[1])
 		
-		if symbol[0] == Type.identifier:
+		elif symbol[0] == Type.identifier:
 			if not symbol[1] in variables:
 				print("undeclared expression: ", symbol[1])
 				exit(-1)
 			else:
 				stack.append(Literal(variables[symbol[1]]))
 		
-		if symbol[0] == Type.separator:
+		elif symbol[0] == Type.separator:
 			break
 	
 	total = len(stack) + 1
@@ -142,6 +145,8 @@ def eval_expr(expression):
 			return expression.left.value - eval_expr(expression.right)
 		else:
 			return expression.left.value - expression.right.value
+		
+	return "Error parsing expression"
 
 #parse and complete assignment
 def parse_assignment(symbols):
@@ -174,7 +179,7 @@ def parse_symbols(symbols):
 		return total
 
 program = '''
-1 + 2 + 3;
+1 + 2 + 3 + 4 + 5;
 '''
 symbols = lex(program)
 
