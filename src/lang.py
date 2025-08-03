@@ -15,15 +15,51 @@ class Type(Enum):
 	operator = 1
 	literal = 2
 	identifier = 3
+	expression = 4
 
-class Binary_Expression:
+class Unit:
+	data_type = None
+
+#binary expressions
+class Binary_Expression(Unit):
+	value = None
 	left = None
 	right = None
 	operator = None
 
-class Identifier:
+	def __init__(self):
+		self.data_type = Type.expression
+
+	def eval(self):
+		if self.left.data_type == Type.expression:
+			self.left.eval()
+
+		if self.right.data_type == Type.expression:
+			self.right.eval()
+
+		if self.operator == '+':
+			self.value = self.left.value + self.right.value
+		elif self.operator == '-':
+			self.value = self.left.value - self.right.value
+		elif self.operator == '=':
+			self.left.value = self.right.value
+
+#identifier (has a name and a value)
+class Identifier(Unit):
 	name = None
 	value = None
+
+	def __init__(self, name, value):
+		self.name = name
+		self.value = value
+		self.data_type = Type.identifier
+
+class Literal(Unit):
+	value = None
+
+	def __init__(self, value):
+		self.value = value
+		self.data_type = Type.literal
 
 #first we run our program through a lexer
 def lex(s):
@@ -73,7 +109,21 @@ def lex(s):
 		
 	return symbols
 
-labels = []
-		
-# get symbols from program/string input
-program = "14 + 8 + 21 - 9 + 13"
+e = Binary_Expression()
+l = Binary_Expression()
+r = Binary_Expression()
+
+l.left = Literal(14)
+l.right = Literal(21)
+l.operator = '-'
+
+r.left = Literal(87)
+r.right = Literal(24)
+r.operator = '+'
+
+e.left = l
+e.right = r
+e.operator = '+'
+
+e.eval()
+print(e.value)
