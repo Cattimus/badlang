@@ -11,6 +11,8 @@ identifier = re.compile("[a-zA-z_]\\w*")
 
 operators = "+-/*="
 
+variables = {}
+
 class Type(Enum):
 	operator = 1
 	literal = 2
@@ -31,20 +33,12 @@ class Binary_Expression(Unit):
 	def __init__(self):
 		self.data_type = Type.expression
 
-#identifier (has a name and a value)
-class Identifier(Unit):
-	name = None
-
-	def __init__(self, name, value):
-		self.name = name
-		self.data_type = Type.identifier
-
 class Literal(Unit):
 	value = None
 
 	def __init__(self, value):
-		self.value = value
 		self.data_type = Type.literal
+		value = value
 
 #first we run our program through a lexer
 def lex(s):
@@ -107,21 +101,20 @@ def parse_expression(symbols):
 
 	for symbol in symbols:
 		if symbol[0] == Type.literal or symbol[0] == Type.operator:
-			stack.append(symbol[1])
+			stack.append(Literal(symbol[1]))
 		
 		if symbol[0] == Type.identifier:
 			if not symbol[1] in variables:
 				print("undeclared expression: ", symbol[1])
 				exit(-1)
 			else:
-				stack.append(variables[symbol[1]])
+				stack.append(Literal(variables[symbol[1]]))
 		
 		if symbol[0] == Type.separator:
 			break
 	
-	total = len(stack)
+	total = len(stack) + 1
 	while(stack):
-
 		if expressions:
 			e = Binary_Expression()
 			e.right = expressions.pop()
@@ -135,10 +128,20 @@ def parse_expression(symbols):
 			e.operator = stack.pop()
 			e.left = stack.pop()
 			expressions.append(e)
-	return (expressions.pop(), total)
+	return (expressions[0], total)
 
 def eval_expr(expression):
-	return 0
+	if expression.operator == '+':
+		if expression.left.data_type == Type.literal and expression.right.data_type == Type.expression:
+			return expression.left.value + eval_expr(expression.right)
+		else:
+			return expression.left.value + expression.right.value
+	
+	if expression.operator == '-':
+		if expression.left.data_type == Type.literal and expression.right.data_type == Type.expression:
+			return expression.left.value - eval_expr(expression.right)
+		else:
+			return expression.left.value - expression.right.value
 
 #parse and complete assignment
 def parse_assignment(symbols):
@@ -156,12 +159,12 @@ def parse_symbols(symbols):
 	global variables
 
 	#first we need to determine what kind of expression we have
-	if len(symbols < 3):
+	if len(symbols) < 3:
 		print("Not enough symbols")
 		exit(-1)
 
 	#this is the signature of an assignment
-	if symbols[0][0] == identifier and symbols[1][1] == '=':
+	if symbols[0][0] == Type.identifier and symbols[1][1] == '=':
 		total = parse_assignment(symbols)
 		return total
 	
@@ -171,13 +174,10 @@ def parse_symbols(symbols):
 		return total
 
 program = '''
-var = 14 + 21 + 19 + 41 - 12;
-1 + 2 + 3 + 4 + 5 + 6;
-val = var + 4;
+1 + 2 + 3;
 '''
-variables = {}
 symbols = lex(program)
-expressions, identifiers = parse_symbols(symbols)
-expressions[0].eval()
-print(variables["var"])
-print(variables["val"])
+
+cursor = 0
+while cursor < len(symbols) - 1:
+	cursor += parse_symbols(symbols[cursor:])
