@@ -1,2 +1,5 @@
 /build
 /.cache
+/.vscode
+src/bin
+src/obj
