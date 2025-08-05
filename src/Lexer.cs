@@ -4,10 +4,11 @@ namespace main;
 
 static class Lexer
 {
-	private static Regex number = new Regex("-?\\d+\\.?\\d*");
-	private static Regex condnull = new Regex("true|false|null");
+	private static Regex number = new Regex("-?\\d+\\.?\\d*", RegexOptions.Compiled);
+	private static Regex cond = new Regex("true|false", RegexOptions.Compiled);
+	private static Regex none = new Regex("null", RegexOptions.Compiled);
 
-	public static List<Token> process(ref string input)
+	public static List<Token> Process(string input)
 	{
 		List<Token> l = new List<Token>();
 
@@ -58,16 +59,28 @@ static class Lexer
 			if (Char.IsAsciiDigit(c) || c == '-')
 			{
 				var match = number.Match(input, i);
-				if (match.Index != 0)
+				if (match.Index == i)
 				{
-					//error out here
-					Console.WriteLine("Match didn't work");
+					l.Add(new Token(Token_Type.Literal, match.ToString()));
+					i += match.Length;
 				}
 			}
 
 			else if (Char.IsAsciiLetter(c))
 			{
-				//check for bool/null
+				var match = cond.Match(input, i);
+				if (match.Index == i)
+				{
+					l.Add(new Token(Token_Type.Bool, match.ToString()));
+					i += match.Length;
+				}
+
+				match = none.Match(input, i);
+				if (match.Index == i)
+				{
+					l.Add(new Token(Token_Type.Null, match.ToString()));
+					i += match.Length;
+				}
 			}
 
 		}

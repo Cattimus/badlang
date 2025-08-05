@@ -12,8 +12,7 @@ enum Token_Type
 	Literal,
 	Obj,
 	Arr,
-	True,
-	False,
+	Bool,
 	Null,
 };
 
