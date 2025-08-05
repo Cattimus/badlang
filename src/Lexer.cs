@@ -7,7 +7,7 @@ static class Lexer
 	private static Regex number = new Regex("-?\\d+\\.?\\d*", RegexOptions.Compiled);
 	private static Regex cond = new Regex("true|false", RegexOptions.Compiled);
 	private static Regex none = new Regex("null", RegexOptions.Compiled);
-	private static Regex str = new Regex(""".*?(?<!\\)""", RegexOptions.Compiled);
+	private static Regex str = new Regex(@""".*?(?<!\\)""", RegexOptions.Compiled);
 
 	private static void print_error(string input, int line, int i)
 	{
@@ -65,7 +65,7 @@ static class Lexer
 				case '"':
 					{
 						var match = str.Match(input, i);
-						if (match.Index == i)
+						if (match.Index == i && match.Length > 0)
 						{
 							l.Add(new Token(Token_Type.String, match.ToString()));
 							i += match.Length;
@@ -81,7 +81,7 @@ static class Lexer
 			if (Char.IsAsciiDigit(c) || c == '-')
 			{
 				var match = number.Match(input, i);
-				if (match.Index == i)
+				if (match.Index == i && match.Length > 0)
 				{
 					l.Add(new Token(Token_Type.Number, match.ToString()));
 					i += match.Length;
@@ -95,7 +95,7 @@ static class Lexer
 			else if (Char.IsAsciiLetter(c))
 			{
 				var match = cond.Match(input, i);
-				if (match.Index == i)
+				if (match.Index == i && match.Length > 0)
 				{
 					l.Add(new Token(Token_Type.Bool, match.ToString()));
 					i += match.Length;
@@ -103,7 +103,7 @@ static class Lexer
 				}
 
 				match = none.Match(input, i);
-				if (match.Index == i)
+				if (match.Index == i && match.Length > 0)
 				{
 					l.Add(new Token(Token_Type.Null, match.ToString()));
 					i += match.Length;

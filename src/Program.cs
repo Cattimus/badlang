@@ -1,4 +1,6 @@
 ﻿
+using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using main;
 
 string example_text = @"{
@@ -24,6 +26,7 @@ string example_text = @"{
     }
 }";
 
+Console.WriteLine(example_text);
 var l = Lexer.Process(example_text);
 
 foreach (var match in l)
