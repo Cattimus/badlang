@@ -9,7 +9,8 @@ enum Token_Type
 	CloseSquareBracket,
 	Separator,
 	Identifier,
-	Literal,
+	String,
+	Number,
 	Obj,
 	Arr,
 	Bool,
@@ -19,8 +20,8 @@ enum Token_Type
 //token for lexer prior to parsing
 class Token
 {
-	Token_Type t;
-	string? raw_data;
+	public Token_Type t;
+	public string? raw_data;
 
 	public Token()
 	{
