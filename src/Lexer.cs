@@ -4,7 +4,7 @@ namespace main;
 
 static class Lexer
 {
-	private static Regex number = new Regex("-?\\d+\\.?\\d*", RegexOptions.Compiled);
+	private static Regex number = new Regex(@"-?\d+\.?\d*", RegexOptions.Compiled);
 	private static Regex cond = new Regex("true|false", RegexOptions.Compiled);
 	private static Regex none = new Regex("null", RegexOptions.Compiled);
 	private static Regex str = new Regex(@""".*?(?<!\\)""", RegexOptions.Compiled);
@@ -68,7 +68,7 @@ static class Lexer
 						if (match.Index == i && match.Length > 0)
 						{
 							l.Add(new Token(Token_Type.String, match.ToString()));
-							i += match.Length;
+							i += match.Length - 1;
 						}
 						else
 						{
@@ -84,7 +84,7 @@ static class Lexer
 				if (match.Index == i && match.Length > 0)
 				{
 					l.Add(new Token(Token_Type.Number, match.ToString()));
-					i += match.Length;
+					i += match.Length - 1;
 				}
 				else
 				{
@@ -98,7 +98,7 @@ static class Lexer
 				if (match.Index == i && match.Length > 0)
 				{
 					l.Add(new Token(Token_Type.Bool, match.ToString()));
-					i += match.Length;
+					i += match.Length - 1;
 					continue;
 				}
 
@@ -106,7 +106,7 @@ static class Lexer
 				if (match.Index == i && match.Length > 0)
 				{
 					l.Add(new Token(Token_Type.Null, match.ToString()));
-					i += match.Length;
+					i += match.Length - 1;
 					continue;
 				}
 
