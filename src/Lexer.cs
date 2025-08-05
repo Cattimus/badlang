@@ -9,10 +9,17 @@ static class Lexer
 	private static Regex none = new Regex("null", RegexOptions.Compiled);
 	private static Regex str = new Regex(""".*?(?<!\\)""", RegexOptions.Compiled);
 
+	private static void print_error(string input, int line, int i)
+	{
+		Console.WriteLine("Invalid token on line: {0}", line);
+		Console.WriteLine("Invalid character is: {0}", input[i]);
+		Environment.Exit(-1);
+	}
+
 	public static List<Token> Process(string input)
 	{
 		List<Token> l = new List<Token>();
-		int line = 0;
+		int line = 1;
 
 		for (int i = 0; i < input.Length; i++)
 		{
@@ -65,8 +72,7 @@ static class Lexer
 						}
 						else
 						{
-							Console.WriteLine("Invalid token on line: {0}", line);
-							Environment.Exit(-1);
+							print_error(input, line, i);
 						}
 						break;
 					}
@@ -82,8 +88,7 @@ static class Lexer
 				}
 				else
 				{
-					Console.WriteLine("Invalid token on line: {0}", line);
-					Environment.Exit(-1);
+					print_error(input, line, i);
 				}
 			}
 
@@ -106,8 +111,7 @@ static class Lexer
 				}
 
 				//This code should never be reached if we match a valid case
-				Console.WriteLine("Invalid token on line: {0}", line);
-				Environment.Exit(-1);
+				print_error(input, line, i);
 			}
 		}
 		return l;
